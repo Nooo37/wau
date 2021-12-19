@@ -203,6 +203,9 @@ int event_dispatcher(const void * data, void *target, uint32_t opcode,
                 if (next_can_be_nil && args[i].o == NULL)
                     lua_pushnil(L);
                 else {
+                    printf("huch %s\n", message->name);
+                    //if (message->types[i] != NULL)
+                    //    printf("emit object of type %s\n", message->types[i]->name);
                     void** udata = lua_newuserdata(L, sizeof(void*));
                     *udata = args[i].o;
                     luaL_setmetatable(L, WL_PROXY_MT);

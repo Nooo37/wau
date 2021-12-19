@@ -14,7 +14,6 @@ int register_interface(lua_State *L);
 int register_proxy(lua_State *L);
 int register_display(lua_State *L);
 
-int wau_connect(lua_State *L);
-int wau_require(lua_State *L);
+int wau_wl_display_connect(lua_State* L);
 
 #endif

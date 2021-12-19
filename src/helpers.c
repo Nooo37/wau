@@ -73,3 +73,40 @@ int destroy_shm(lua_State* L)
     close(fd);
     return 0;
 }
+
+int get_pixel(lua_State* L)
+{
+    const uint32_t* data = lua_topointer(L, 1);
+    int x = luaL_checknumber(L, 2);
+    int y = luaL_checknumber(L, 3);
+    int width = luaL_checknumber(L, 4);
+    uint32_t pixel = data[y * width + x];
+    lua_pushnumber(L, pixel);
+    return 1;
+}
+
+int set_pixel(lua_State* L)
+{
+    uint32_t* data = (void*) lua_topointer(L, 1);
+    uint32_t pixel = luaL_checknumber(L, 2);
+    int x = luaL_checknumber(L, 3);
+    int y = luaL_checknumber(L, 4);
+    int width = luaL_checknumber(L, 5);
+    data[y * width + x] = pixel;
+    return 0;
+}
+
+static const luaL_Reg _helpers[] = {
+    { "allocate_shm", allocate_shm },
+    { "destroy_shm",  destroy_shm },
+    { "get_pixel",    get_pixel },
+    { "set_pixel",    set_pixel },
+    { NULL, NULL }
+};
+
+int register_helpers(lua_State* L)
+{
+    lua_newtable(L);
+    luaL_setfuncs(L, _helpers, 0);
+    return 1;
+}
