@@ -130,22 +130,24 @@ end
 local function get_message_types(args)
     local types = "{ "
     for _, arg in ipairs(args) do
-        if arg.type == "object" then
-            -- check if interface exists (what to do?)
+        if arg.type == "object" or arg.type == "new_id" then
             local iface = arg.interface
                 and string.format("wau.%s", arg.interface)
-                or "nil"
+                or "0"
             types = string.format("%s%s, ", types, iface)
         else
-            types = types .. "nil, "
+            types = types .. "0, "
         end
+    end
+    if #args == 0 then -- there should be no empty type arrays
+        types = string.format("%s%s ", types, "0 ")
     end
     return types .. "}"
 end
 
-local function get_message_signature(args)
-    local signature = ""
-    for _, arg in ipairs(args) do
+local function get_message_signature(mes)
+    local signature = mes.since and mes.since or ""
+    for _, arg in ipairs(mes.args) do
         signature = signature .. convert_type_to_signature(arg.type,
             arg["allow-null"] and arg["allow-null"] == "true")
     end
@@ -202,7 +204,7 @@ function printer.internal_message(mes)
     printer.indent_add()
     printer.line([[name = "%s",]], mes.name)
     printer.line([[signature = "%s",]],
-        get_message_signature(mes.args))
+        get_message_signature(mes))
     printer.line([[types = %s,]],
         get_message_types(mes.args))
     printer.indent_sub()

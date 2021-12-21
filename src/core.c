@@ -39,7 +39,7 @@ const struct wl_interface **parse_types(lua_State *L, int idx)
     lua_pushvalue(L, idx);
     for (int i = 0; i < len; i++) {
         lua_rawgeti(L, -1, i + 1);
-        if (lua_isnil(L, -1))
+        if (lua_isnil(L, -1) || lua_isnumber(L, -1)) /* using 0 for NULLs */
             types[i] = NULL;
         else
             types[i] = *((void**) luaL_checkudata(L, -1, WL_INTERFACE_MT));
@@ -52,6 +52,8 @@ const struct wl_interface **parse_types(lua_State *L, int idx)
 struct wl_message* parse_messages(lua_State *L, int idx)
 {
     int len = lua_rawlen(L, idx);
+    if (len == 0)
+        return NULL;
     struct wl_message *messages = malloc(len * sizeof(struct wl_message));
     lua_pushvalue(L, idx);
     for (int i = 0; i < len; i++) {
