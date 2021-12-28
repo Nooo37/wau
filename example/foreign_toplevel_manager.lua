@@ -1,6 +1,6 @@
 local wau = require("wau")
 
-wau:require("wlr-foreign-toplevel-management-unstable-v1")
+wau:require("protocol.wlr-foreign-toplevel-management-unstable-v1")
 
 
 local display = wau.wl_display.connect()

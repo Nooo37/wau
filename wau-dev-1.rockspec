@@ -7,19 +7,23 @@ source = {
 }
 
 description = {
-   summary = "Rudimentary lua libwayland bindings",
+   summary = "Basic lua libwayland bindings",
    homepage = "https://github.com/Nooo37/wau",
 }
 
+dependencies = {
+   "xml2lua >= 1.5",
+   "cffi-lua >= 0.2.1",
+}
+
 build = {
-   type = "make",
-   install_variables = {
-      INST_PREFIX="$(PREFIX)",
-      INST_BINDIR="$(BINDIR)",
-      INST_LIBDIR="$(LIBDIR)",
-      INST_LUADIR="$(LUADIR)",
-      INST_CONFDIR="$(CONFDIR)",
-      LUA="$(LUA)",
+   type = "builtin",
+   modules = {
+      ["wau"] = "wau/init.lua",
+      ["wau.raw"] = "wau/raw.lua",
+      ["wau.wl_proxy"] = "wau/wl_proxy.lua",
+      ["wau.wl_interface"] = "wau/wl_interface.lua",
+      ["wau.protocol.wayland"] = "wau/protocol/wayland.lua",
    },
    copy_directories = { "example" }
 }
