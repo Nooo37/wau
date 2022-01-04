@@ -92,7 +92,7 @@ function M.marshal(self, opcode, ...)
 end
 
 function M.marshal_constructor(self, opcode, iface, ...)
-    local id = raw.wl_proxy_marshal_constructor(self, opcode, iface, ...)
+    local id = raw.wl_proxy_marshal_constructor(self, opcode, iface, nil, ...)
     return return_new_proxy(id)
 end
 
