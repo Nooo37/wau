@@ -14,7 +14,4 @@ end
 
 wau:require("wau.protocol.wayland")
 
-wau.wl_display.disconnect = 8
-print(wau.wl_display.disconnect)
-
 return wau

@@ -1,9 +1,8 @@
 local ffi = require("cffi")
 
-local wc = ffi.load("wayland-client")
+local M = ffi.load("wayland-client")
 
-local d1=
-[[
+local s = [[
 typedef int32_t wl_fixed_t;
 
 struct wl_interface {
@@ -200,10 +199,7 @@ int
 wl_display_read_events(struct wl_display *display);
 ]]
 
-ffi.cdef(d1)
+ffi.cdef(s)
 
-return wc
-
---void
---wl_log_set_handler_client(wl_log_func_t handler);
+return M
 
