@@ -23,6 +23,7 @@ build = {
       ["wau.raw"] = "wau/raw.lua",
       ["wau.wl_proxy"] = "wau/wl_proxy.lua",
       ["wau.wl_interface"] = "wau/wl_interface.lua",
+      ["wau.cursor.raw"] = "wau/cursor/raw.lua",
       ["wau.cursor.wl_cursor"] = "wau/cursor/wl_cursor.lua",
       ["wau.cursor.wl_cursor_image"] = "wau/cursor/wl_cursor_image.lua",
       ["wau.cursor.wl_cursor_theme"] = "wau/cursor/wl_cursor_theme.lua",
