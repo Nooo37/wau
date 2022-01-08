@@ -7,7 +7,7 @@ source = {
 }
 
 description = {
-   summary = "Basic lua libwayland bindings",
+   summary = "Basic client-side lua libwayland bindings",
    homepage = "https://github.com/Nooo37/wau",
 }
 
@@ -23,6 +23,9 @@ build = {
       ["wau.raw"] = "wau/raw.lua",
       ["wau.wl_proxy"] = "wau/wl_proxy.lua",
       ["wau.wl_interface"] = "wau/wl_interface.lua",
+      ["wau.wl_cursor"] = "wau/cursor/wl_cursor.lua",
+      ["wau.wl_cursor_image"] = "wau/cursor/wl_cursor_image.lua",
+      ["wau.wl_cursor_theme"] = "wau/cursor/wl_cursor_theme.lua",
       ["wau.protocol.wayland"] = "wau/protocol/wayland.lua",
    },
    copy_directories = { "example" }
