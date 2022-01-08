@@ -6,9 +6,9 @@ local wau = require("wau")
 wau:require("protocol.xdg-shell") -- layershell implicitly depends on xdg-shell
 wau:require("protocol.wlr-layer-shell-unstable-v1")
 
-local helpers = require("helpers")
 -- something we need later on
 
+local helpers = require("helpers") -- helpers.so should be built already
 local lgi = require("lgi")
 local cairo = lgi.cairo
 
@@ -21,17 +21,21 @@ assert(display, "Couldn't connect to the wayland server")
 
 local registry = display:get_registry()
 local output, comp, shm, layershell
-registry:connect_event("global", function(_, name, interface, version)
-    if interface == "wl_output" then
-        output = registry:bind(name, wau.wl_output, version)
-    elseif interface == "wl_compositor" then
-        comp = registry:bind(name, wau.wl_compositor, version)
-    elseif interface == "wl_shm" then
-        shm = registry:bind(name, wau.wl_shm, version)
-    elseif interface == "zwlr_layer_shell_v1" then
-        layershell = registry:bind(name, wau.zwlr_layer_shell_v1, version)
+
+registry:add_listener {
+    ["global"] = function(_, name, interface, version)
+        if interface == "wl_output" then
+            output = registry:bind(name, wau.wl_output, version)
+        elseif interface == "wl_compositor" then
+            comp = registry:bind(name, wau.wl_compositor, version)
+        elseif interface == "wl_shm" then
+            shm = registry:bind(name, wau.wl_shm, version)
+        elseif interface == "zwlr_layer_shell_v1" then
+            layershell = registry:bind(name, wau.zwlr_layer_shell_v1, version)
+        end
     end
-end)
+}
+
 display:roundtrip()
 assert(output and comp and shm, "Couldn't load wl_ output, compositor or shm")
 assert(layershell, "Couldn't load layershell")
@@ -49,10 +53,11 @@ display:roundtrip()
 local mywidget = layershell:get_layer_surface(surface, output,
     wau.zwlr_layer_shell_v1.Layer.TOP, "epicwau")
 
-mywidget:set_anchor(mywidget.Anchor.RIGHT + mywidget.Anchor.TOP)
+local Anchor = wau.zwlr_layer_surface_v1.Anchor
+mywidget:set_anchor(Anchor.RIGHT + Anchor.TOP)
         :set_margin(10, 10, 10, 10)
         :set_size(width, height)
-        :connect_event("configure", function(_, s) mywidget:ack_configure(s) end)
+        :add_listener { ["configure"] = function(_, s) mywidget:ack_configure(s) end }
 
 surface:commit()
 display:roundtrip()

@@ -5,11 +5,15 @@ local wau = require("wau")
 -- in this case it is redundant since it uses the default path anyway
 local path_to_server = os.getenv("XDG_RUNTIME_DIR") .. "/wayland-1"
 local display = wau.wl_display.connect(path_to_server)
+assert(display, "Failed to connect to wayland server")
 
 local registry = display:get_registry()
-registry:connect_event("global", function(_, _, interface, version)
-    print(interface, version)
-end)
+
+registry:add_listener {
+    ["global"] = function(_, _, interface, version)
+        print(interface, version)
+    end
+}
 
 display:roundtrip()
 

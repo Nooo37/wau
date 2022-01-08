@@ -11,12 +11,15 @@ display:roundtrip()
 local registry = display:get_registry()
 
 local toplevel_manager
-registry:connect_event("global",function(self, name, iface, version)
-    if iface == "zwlr_foreign_toplevel_manager_v1" then
-        toplevel_manager = self:bind(name,
-            wau.zwlr_foreign_toplevel_manager_v1, version)
+
+registry:add_listener {
+    ["global"] = function(self, name, iface, version)
+        if iface == "zwlr_foreign_toplevel_manager_v1" then
+            toplevel_manager = self:bind(name,
+                wau.zwlr_foreign_toplevel_manager_v1, version)
+        end
     end
-end)
+}
 
 display:roundtrip()
 assert(toplevel_manager, "Failed to bind foreign toplevel manager")
