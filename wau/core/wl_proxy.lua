@@ -1,14 +1,18 @@
 local ffi = require("cffi")
 
-local wl_interface = require("wau.wl_interface")
-local raw = require("wau.raw")
+local wl_interface = require("wau.core.wl_interface")
+local raw = require("wau.core.raw")
 
-local M = { mt = {}, __events = {} }
+local M = { mt = {}, __events = {}, __data = {} }
 
 -- private helper functions
 
+local function get_identifier_for(proxy)
+    return proxy:get_id()
+end
+
 local function get_callback_table_for(proxy, name)
-    local id = proxy:get_id()
+    local id = get_identifier_for(proxy)
     M.__events[id] = M.__events[id] or {}
     local t = M.__events[id]
     t[name] = t[name] or {}
@@ -22,6 +26,7 @@ local function get_proxy_safe(np, next_can_be_nil)
        return ffi.cast("struct wl_proxy*", np)
    end
 end
+
 
 local function parse_args(proxy, message, args)
     local next_can_be_nil = false
@@ -81,11 +86,14 @@ end
 
 -- marshalling methods
 
-local function return_new_proxy(id)
-    if id == ffi.nullptr then return nil end
-    raw.wl_proxy_add_dispatcher(id, M.dispatcher, nil, nil)
-    return id
+local function return_new_proxy(obj)
+    local o = ffi.cast("struct wl_proxy*", obj)
+    if o == ffi.nullptr then return nil end
+    raw.wl_proxy_add_dispatcher(o, M.dispatcher, nil, nil)
+    return o
 end
+
+M.setup_new_proxy = return_new_proxy
 
 function M.marshal(self, opcode, ...)
     raw.wl_proxy_marshal(self, opcode, ...)

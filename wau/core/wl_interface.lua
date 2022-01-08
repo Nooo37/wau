@@ -1,5 +1,5 @@
 local ffi = require("cffi")
-local raw = require("wau.raw")
+local raw = require("wau.core.raw")
 
 ffi.cdef[[
 void *malloc(int64_t);
@@ -52,7 +52,7 @@ local function get_method_type(method_data)
     local n_idx = signature:find("n")
     if n_idx and method_data.types[n_idx] ~= nil then
         return mtype.CONSTRUCTOR
-    elseif n_idx and method_data.types[n_idx] == nil then
+    elseif n_idx and (method_data.types[n_idx] == nil or method_data.types[n_idx] == 0) then
         return mtype.VERSIONED_CONSTRUCTOR
     elseif method_data.type and method_data.type == "destructor" then
         return mtype.DESTRUCTOR
@@ -142,7 +142,7 @@ function M.mt.__index(self, k)
     local iface = ffi.string(self.name)
     local res = M.__private[iface][k]
     if res then return res end
-    local wl_proxy = require("wau.wl_proxy")
+    local wl_proxy = require("wau.core.wl_proxy")
     res = wl_proxy[k]
     return res
 end

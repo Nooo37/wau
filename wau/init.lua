@@ -1,9 +1,9 @@
 local wau = {
     -- core
-    wl_proxy = require("wau.wl_proxy"),
-    wl_interface = require("wau.wl_interface"),
+    wl_proxy        = require("wau.core.wl_proxy"),
+    wl_interface    = require("wau.core.wl_interface"),
     -- cursor
-    wl_cursor = require("wau.cursor.wl_cursor"),
+    wl_cursor       = require("wau.cursor.wl_cursor"),
     wl_cursor_image = require("wau.cursor.wl_cursor_image"),
     wl_cursor_theme = require("wau.cursor.wl_cursor_theme"),
 }
