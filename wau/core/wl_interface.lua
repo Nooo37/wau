@@ -140,11 +140,7 @@ end
 function M.mt.__index(self, k)
     if k == "init" then return M.init end
     local iface = ffi.string(self.name)
-    local res = M.__private[iface][k]
-    if res then return res end
-    local wl_proxy = require("wau.core.wl_proxy")
-    res = wl_proxy[k]
-    return res
+    return M.__private[iface][k]
 end
 
 function M.mt.__newindex(self, k, v)
