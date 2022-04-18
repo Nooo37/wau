@@ -21,6 +21,7 @@ jobs:
         run: |
           luarocks install ldoc
           luarocks install lua-discount
+          luarocks install xml2lua
 
       - name: Generate documentation
         run: |
