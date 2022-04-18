@@ -26,7 +26,7 @@ jobs:
       - name: Generate documentation
         run: |
           mkdir -p 'out'
-          make all -C examples
+          make protocol -C examples
           ldoc wau --config 'docs/config.ld' --dir 'out/docs'
           touch out/docs/.nojekyll
 
