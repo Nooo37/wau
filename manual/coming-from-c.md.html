@@ -70,126 +70,178 @@
 
 <div id="content">
 
-    If you come from C and you did a little bit of wayland over there, you will find that most things are done very analogous.
-<p>Let's take a look at one of the most simple C libwayland examples straight from [the wayland book](https://wayland-book.com/registry/binding.html) - listing all globals:
-<p>```C
-#include <stdint.h>
-#include <stdio.h>
-#include <wayland-client.h>
-<p>static void
-registry_handle_global(void *data, struct wl_registry *registry,
-		uint32_t name, const char *interface, uint32_t version)
+
+<p>If you come from C and you did a little bit of wayland over there, you will find that most things are done very analogous.</p>
+
+<p>Let's take a look at one of the most simple C libwayland examples straight from <a href="https://wayland-book.com/registry/binding.html">the wayland book</a> - listing all globals:</p>
+
+
+<pre>
+#include &lt;stdint.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;wayland-client.h&gt;
+
+<span class="keyword">static</span> <span class="keyword">void</span>
+registry_handle_global(<span class="keyword">void</span> *data, <span class="keyword">struct</span> wl_registry *registry,
+        uint32_t name, <span class="keyword">const</span> <span class="keyword">char</span> *interface, uint32_t version)
 {
-	printf("interface: '%s', version: %d, name: %d\n",
-			interface, version, name);
+    printf(<span class="string">"interface: '%s', version: %d, name: %d\n"</span>,
+            interface, version, name);
 }
-<p>static void
-registry_handle_global_remove(void *data, struct wl_registry *registry,
-		uint32_t name)
+
+<span class="keyword">static</span> <span class="keyword">void</span>
+registry_handle_global_remove(<span class="keyword">void</span> *data, <span class="keyword">struct</span> wl_registry *registry,
+        uint32_t name)
 {
-	// This space deliberately left blank
-}
-<p>static const struct wl_registry_listener
+    <span class="comment">// This space deliberately left blank
+</span>}
+
+<span class="keyword">static</span> <span class="keyword">const</span> <span class="keyword">struct</span> wl_registry_listener
 registry_listener = {
-	.global = registry_handle_global,
-	.global_remove = registry_handle_global_remove,
+    .global = registry_handle_global,
+    .global_remove = registry_handle_global_remove,
 };
-<p>int
-main(int argc, char *argv[])
+
+<span class="keyword">int</span>
+main(<span class="keyword">int</span> argc, <span class="keyword">char</span> *argv[])
 {
-	struct wl_display *display = wl_display_connect(NULL);
-	struct wl_registry *registry = wl_display_get_registry(display);
-	wl_registry_add_listener(registry, &registry_listener, NULL);
-	wl_display_roundtrip(display);
-	return 0;
+    <span class="keyword">struct</span> wl_display *display = wl_display_connect(NULL);
+    <span class="keyword">struct</span> wl_registry *registry = wl_display_get_registry(display);
+    wl_registry_add_listener(registry, &amp;registry_listener, NULL);
+    wl_display_roundtrip(display);
+    <span class="keyword">return</span> <span class="number">0</span>;
 }
-```
-<p># Direct translation
-<p>How would we achieve that with lua and wau?
-<p>First, we will translate the code above as accurately as possible to lua:
-<p>```lua
-local wau = require("wau")
-<p>local function registry_handle_global(registry, name, interface, version)
-    print("interface: " .. interface .. ", version: " .. tostring(version) .. ", name: " .. name)
-end
-<p>local function registry_handle_global_remove(registry, name)
-    -- This space deliberately left blank
-end
-<p>local registry_listener = {
-    ["global"] = registry_handle_global,
-    ["global_remove"] = registry_handle_global_remove
+</pre>
+
+
+<h1>Direct translation</h1>
+
+<p>How would we achieve that with lua and wau?</p>
+
+<p>First, we will translate the code above as accurately as possible to lua:</p>
+
+
+<pre>
+<span class="keyword">local</span> wau = <span class="global">require</span>(<span class="string">"wau"</span>)
+
+<span class="keyword">local</span> <span class="keyword">function</span> registry_handle_global(registry, name, interface, version)
+    <span class="global">print</span>(<span class="string">"interface: "</span> .. interface .. <span class="string">", version: "</span> .. <span class="global">tostring</span>(version) .. <span class="string">", name: "</span> .. name)
+<span class="keyword">end</span>
+
+<span class="keyword">local</span> <span class="keyword">function</span> registry_handle_global_remove(registry, name)
+    <span class="comment">-- This space deliberately left blank
+</span><span class="keyword">end</span>
+
+<span class="keyword">local</span> registry_listener = {
+    [<span class="string">"global"</span>] = registry_handle_global,
+    [<span class="string">"global_remove"</span>] = registry_handle_global_remove
 }
-<p>local function main()
-    local display = wau.wl_display.connect(nil)
-    local registry = wau.wl_display.get_registry(display)
-    wau.wl_registry.add_listener(registry, registry_listener, nil)
+
+<span class="keyword">local</span> <span class="keyword">function</span> main()
+    <span class="keyword">local</span> display = wau.wl_display.connect(<span class="keyword">nil</span>)
+    <span class="keyword">local</span> registry = wau.wl_display.get_registry(display)
+    wau.wl_registry.add_listener(registry, registry_listener, <span class="keyword">nil</span>)
     wau.wl_display.roundtrip(display)
-    return 0
-end
-<p>main()
-```
-<p>That looks overly similar already. What are some differences?
-<p>- The callbacks don't get a data object handed to them
-- Well... that's about it, the rest is about conforming to luas language specifics
-<p># "Improvements"
-<p>Now there are some improvements we can make with that program to write more lua-style:
-<p>## 1. Lua can emulate object-oriented programming
-<p>If we got a wayland interface `wl_thing`, then all fields that are accessbile through `wau.wl_thing[key]`, are also accessible by an instance of the interface directly `mything[key]`.
-<p>So instead of doing `wau.wl_display.get_registry(display)`, we could do `display.get_registry(display)`. And if you know a little lua already, that is a case where the `:`-operator comes in handy. It's equivalent to `display:get_registry()`.
-<p>```diff
-    local display = wau.wl_display.connect(nil)
--   local registry = wau.wl_display.get_registry(display)
-+   local registry = display:get_registry()
--   wau.wl_registry.add_listener(registry, registry_listener, nil)
+    <span class="keyword">return</span> <span class="number">0</span>
+<span class="keyword">end</span>
+
+main()
+</pre>
+
+
+<p>That looks overly similar already. What are some differences?</p>
+
+<ul>
+    <li>The callbacks don't get a data object handed to them</li>
+    <li>Well... that's about it, the rest is about conforming to luas language specifics</li>
+</ul>
+
+<h1>"Improvements"</h1>
+
+<p>Now there are some improvements we can make with that program to write more lua-style:</p>
+
+<p><a name="1__Lua_can_emulate_object_oriented_programming"></a></p>
+<h2>1. Lua can emulate object-oriented programming</h2>
+
+<p>If we got a wayland interface <code>wl_thing</code>, then all fields that are accessbile through <code>wau.wl_thing[key]</code>, are also accessible by an instance of the interface directly <code>mything[key]</code>. </p>
+
+<p>So instead of doing <code>wau.wl_display.get_registry(display)</code>, we could do <code>display.get_registry(display)</code>. And if you know a little lua already, that is a case where the <code>:</code>-operator comes in handy. It's equivalent to <code>display:get_registry()</code>.</p>
+
+
+<pre>
+    <span class="keyword">local</span> display = wau.wl_display.connect(<span class="keyword">nil</span>)
+-   <span class="keyword">local</span> registry = wau.wl_display.get_registry(display)
++   <span class="keyword">local</span> registry = display:get_registry()
+-   wau.wl_registry.add_listener(registry, registry_listener, <span class="keyword">nil</span>)
 +   registry:add_listener(registry_listener)
 -   wau.wl_display.roundtrip(display)
 +   display:roundtrip()
-```
-<p>## 2. Lua is more forgiving
-<p>As a scripting language, lua let's you write more freely when doing your wayland work.
-<p>Take for example the `registry_listener`. In C, we need them to be `static const`. But in lua there is no need for them to be declared outside of the function.
-<p>```diff
+</pre>
+
+
+<p><a name="2__Lua_is_more_forgiving"></a></p>
+<h2>2. Lua is more forgiving</h2>
+
+<p>As a scripting language, lua let's you write more freely when doing your wayland work. </p>
+
+<p>Take for example the <code>registry_listener</code>. In C, we need them to be <code>static const</code>. But in lua there is no need for them to be declared outside of the function.</p>
+
+
+<pre>
 -   registry:add_listener(registry_listener)
 +   registry:add_listener {
-+       ["global"] = registry_handle_global,
-+       ["global_remove"] = registry_handle_global_remove
++       [<span class="string">"global"</span>] = registry_handle_global,
++       [<span class="string">"global_remove"</span>] = registry_handle_global_remove
 +   }
-```
-<p>And even there, we can even inline the functions to which we are here referencing, if we really want to (of course there will be cases where it is more convenient to not do so).
-<p>```diff
+</pre>
+
+
+<p>And even there, we can even inline the functions to which we are here referencing, if we really want to (of course there will be cases where it is more convenient to not do so).</p>
+
+
+<pre>
     registry:add_listener {
--       ["global"] = registry_handle_global,
-+       ["global"] = function(registry, name, interface, version)
-+           print("interface: " .. interface .. ", version: " .. tostring(version) .. ", name: " .. name)
-+       end,
--       ["global_remove"] = registry_handle_global_remove
-+       ["global_remove"] = function(registry, name)
-+           -- This space deliberately left blank
-+       end
+-       [<span class="string">"global"</span>] = registry_handle_global,
++       [<span class="string">"global"</span>] = <span class="keyword">function</span>(registry, name, interface, version)
++           <span class="global">print</span>(<span class="string">"interface: "</span> .. interface .. <span class="string">", version: "</span> .. <span class="global">tostring</span>(version) .. <span class="string">", name: "</span> .. name)
++       <span class="keyword">end</span>,
+-       [<span class="string">"global_remove"</span>] = registry_handle_global_remove
++       [<span class="string">"global_remove"</span>] = <span class="keyword">function</span>(registry, name)
++           <span class="comment">-- This space deliberately left blank
+</span>+       <span class="keyword">end</span>
     }
-```
-<p>And of course, having a `main` function was more of an exercise in recreating the C code very precisly. We don't need that in lua, it will just start to execute the script starting from the top. So what we end up after all the refactors is the following:
-<p>```lua
-local wau = require("wau")
-<p>local display = wau.wl_display.connect(nil)
-local registry = display:get_registry()
-<p>registry:add_listener {
-    ["global"] = function(registry, name, interface, version)
-        print("interface: " .. interface .. ", version: " .. tostring(version) .. ", name: " .. name)
-    end,
-    ["global_remove"] = function(registry, name)
-        -- This space deliberately left blank
-    end
+</pre>
+
+
+<p>And of course, having a <code>main</code> function was more of an exercise in recreating the C code very precisly. We don't need that in lua, it will just start to execute the script starting from the top. So what we end up after all the refactors is the following:</p>
+
+
+<pre>
+<span class="keyword">local</span> wau = <span class="global">require</span>(<span class="string">"wau"</span>)
+
+<span class="keyword">local</span> display = wau.wl_display.connect(<span class="keyword">nil</span>)
+<span class="keyword">local</span> registry = display:get_registry()
+
+registry:add_listener {
+    [<span class="string">"global"</span>] = <span class="keyword">function</span>(registry, name, interface, version)
+        <span class="global">print</span>(<span class="string">"interface: "</span> .. interface .. <span class="string">", version: "</span> .. <span class="global">tostring</span>(version) .. <span class="string">", name: "</span> .. name)
+    <span class="keyword">end</span>,
+    [<span class="string">"global_remove"</span>] = <span class="keyword">function</span>(registry, name)
+        <span class="comment">-- This space deliberately left blank
+</span>    <span class="keyword">end</span>
 }
-<p>display:roundtrip()
-```
-<p>
+
+display:roundtrip()
+</pre>
+
+
+
 
 </div> <!-- id="content" -->
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
-<i style="float:right;">Last updated 2022-04-18 16:23:33 </i>
+<i style="float:right;">Last updated 2022-04-18 16:29:50 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>
