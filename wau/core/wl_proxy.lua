@@ -1,3 +1,16 @@
+--- Every object you will encounter is actually a `wl_proxy` object with a different given set of methods (depending on its interface).
+    -- Thus it inherits all the `wl_proxy` methods - most notable the `add_listener` method.
+    -- The different/variable set of methods available to an object is defined by the @{wl_interface} that the object has.
+    -- The "to string" behavior of a proxy follows the wayland convention (for example similar to `wl_registry@2`)
+-- @usage
+    -- local wau = require("wau")
+    -- local display = wau.wl_display.connect(nil)
+    -- local registry = display:get_registry()
+    -- print(display:get_id(), display:get_class(), display) -- the ID of the dipslay is always 1
+    -- print(registry:get_id(), registry:get_class(), registry)
+-- @classmod wl_proxy
+-- @alias M
+
 local ffi = require("cffi")
 
 local wl_interface = require("wau.core.wl_interface")
@@ -76,11 +89,15 @@ end
 
 M.dispatcher = ffi.cast("wl_dispatcher_func_t", M.dispatcher_func)
 
-function M.get_class(self)
+--- Get the class of the proxy
+-- @treturn string The class name
+function M:get_class()
     return ffi.string(raw.wl_proxy_get_class(self))
 end
 
-function M.get_id(self)
+--- Get the ID of the proxy
+-- @treturn int The ID of the proxy
+function M:get_id()
     return raw.wl_proxy_get_id(self)
 end
 
@@ -95,16 +112,16 @@ end
 
 M.setup_new_proxy = return_new_proxy
 
-function M.marshal(self, opcode, ...)
+function M:marshal(opcode, ...)
     raw.wl_proxy_marshal(self, opcode, ...)
 end
 
-function M.marshal_constructor(self, opcode, iface, ...)
+function M:marshal_constructor(opcode, iface, ...)
     local id = raw.wl_proxy_marshal_constructor(self, opcode, iface, nil, ...)
     return return_new_proxy(id)
 end
 
-function M.marshal_constructor_versioned(self, opcode, iface, version, name, iface_name)
+function M:marshal_constructor_versioned(opcode, iface, version, name, iface_name)
     local id = raw.wl_proxy_marshal_constructor_versioned(
             self, opcode, iface, version, name, iface_name, version, nil)
     return return_new_proxy(id)
@@ -112,19 +129,28 @@ end
 
 -- event related methods
 
-function M.add_listener(self, listener)
+--- Add event listeners to the proxy.
+-- @param listener A table of event listener functions whose key is the event name. The first parameter to the function is `self` (the object that received the event) followed by the parameters as specified in the protocol. For in action see  @{wl_interface}
+-- - test
+-- - huch
+-- @usage
+-- my_proxy:add_listener {
+    --    ["event_name"] = function(self, b) print(b) end,
+    --    ["another_event"] = function(self) error("hey") end
+    -- }
+function M:add_listener(listener)
     for event_name, func in pairs(listener) do
         local event_callbacks = get_callback_table_for(self, event_name)
         table.insert(event_callbacks, func)
     end
 end
 
-function M.connect_event(self, event_name, func)
+function M:connect_event(event_name, func)
     local callbacks = get_callback_table_for(self, event_name)
     table.insert(callbacks, func)
 end
 
-function M.disconnect_event(self, event_name, func)
+function M:disconnect_event(event_name, func)
     local callbacks = get_callback_table_for(self, event_name)
     local idx = nil
     for i, f in ipairs(callbacks) do

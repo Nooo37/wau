@@ -1,3 +1,4 @@
-/example/protocol
+/examples/protocol
 /wau/protocol/*.xml
 helpers.so
+/out

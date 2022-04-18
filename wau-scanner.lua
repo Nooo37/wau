@@ -1,6 +1,14 @@
 local xml2lua = require("xml2lua")
 local handler = require("xmlhandler.tree")
 
+local function to_camel_case(s)
+    return s:gsub("_(.)", string.upper):gsub("^(.)", string.upper)
+end
+
+local function to_upper_case(s)
+    return s:upper()
+end
+
 -- parsing
 
 local parser = {}
@@ -135,7 +143,6 @@ local function get_message_signature(mes)
     return signature
 end
 
-
 local printer = {
     include_comments = true,
     opcode_field = "_OpCode",
@@ -177,26 +184,9 @@ function printer.comment(s)
     return printer
 end
 
-function printer.description(obj)
-    if not obj.description then
-        if obj.summary and printer.include_comments then
-            printer.line([[--- %s]], obj.summary)
-        end
-    else
-        local desc = obj.description
-        if desc.summary and printer.include_comments then
-            printer.line([[--- %s]], desc.summary)
-        end
-        if desc.long then
-            printer.comment(desc.long)
-        end
-    end
-end
-
 function printer.message(mes)
     printer.line([[{]])
     printer.indent_add()
-    printer.description(mes)
     printer.line([[name = "%s",]], mes.name)
     printer.line([[signature = "%s",]],
         get_message_signature(mes))
@@ -210,21 +200,22 @@ function printer.message(mes)
 end
 
 function printer.enum(enum)
-    printer.indent_add()
-    printer.description(enum)
     printer.line([[["%s"] = {]], enum.name)
     printer.indent_add()
     for _, entry in ipairs(enum.entries) do
-        printer.description(entry)
         printer.line([[["%s"] = %s,]], entry.name, entry.value)
     end
     printer.indent_sub()
     printer.line([[},]])
-    printer.indent_sub()
 end
 
 function printer.interface(iface)
-    printer.description(iface)
+    printer.line([[--- %s]], iface.description.summary or iface.name)
+    if iface.description.long then
+        printer.line([[--]])
+        printer.comment(iface.description.long)
+    end
+    printer.line([[-- @type %s]], iface.name)
     printer.line([[wau.%s:init {]], iface.name)
     printer.indent_add()
     -- basics
@@ -234,6 +225,25 @@ function printer.interface(iface)
     printer.line([[methods = {]])
     printer.indent_add()
     for _, request in ipairs(iface.requests) do
+        printer.line([[--- %s]], request.description.summary or request.name)
+        if request.description.long then
+            printer.line([[--]])
+            printer.comment(request.description.long)
+        end
+        printer.line([[-- @function %s:%s]], iface.name, request.name)
+        local returns = false
+        for _, arg in ipairs(request.args) do
+            if arg.type ~= "new_id" then
+                printer.line([[-- @tparam %s %s%s]], arg.type == "object" and arg.interface or arg.type, arg.name,
+                    arg.summary and " " .. arg.summary or "")
+            else
+                returns = true
+                printer.line([[-- @treturn %s]], arg.interface or "object")
+            end
+        end
+        if not returns then
+            printer.line([[-- @treturn %s self]], iface.name)
+        end
         printer.message(request)
     end
     printer.indent_sub()
@@ -242,6 +252,17 @@ function printer.interface(iface)
     printer.line([[events = {]])
     printer.indent_add()
     for _, event in ipairs(iface.events) do
+        printer.line([[--- %s]], event.description.summary or event.name)
+        if event.description.long then
+            printer.line([[--]])
+            printer.comment(event.description.long)
+        end
+        printer.line([[-- @event %s:%s]], iface.name, event.name)
+        for _, arg in ipairs(event.args) do
+            printer.line([[-- @tparam %s %s%s]], (arg.type == "object" or arg.type == "new_id")
+                and arg.interface or arg.type, arg.name,
+                arg.summary and " " .. arg.summary or "")
+        end
         printer.message(event)
     end
     printer.indent_sub()
@@ -250,6 +271,18 @@ function printer.interface(iface)
     printer.line([[enums = {]])
     printer.indent_add()
     for _, enum in ipairs(iface.enums) do
+        printer.line([[--- %s]], enum.description and enum.description.summary or enum.name)
+        if enum.description and enum.description.long then
+            printer.line([[--]])
+            printer.comment(enum.description.long)
+        end
+        printer.line([[-- @enum %s.%s]], iface.name, to_camel_case(enum.name))
+        for _, entry in ipairs(enum.entries) do
+            printer.line([[-- @param %s %s%s]],
+                to_upper_case(entry.name),
+                entry.value,
+                entry.summary and " " .. entry.summary or "")
+        end
         printer.enum(enum)
     end
     printer.indent_sub()
@@ -269,11 +302,14 @@ function printer.interface(iface)
 end
 
 function printer.protocol(protocol)
-    if protocol.copyright and printer.include_comments then
-        printer.comment(protocol.copyright)
+    printer.line([[--- %s]], protocol.name)
+    printer.line([[-- @module %s]], protocol.name)
+
+    if protocol.copyright then
         printer.line()
+        printer.comment(protocol.copyright)
     end
-    printer.description(protocol)
+
     printer.line([[return function(wau)]])
     printer.line()
     printer.line([[local interfaces = {]])

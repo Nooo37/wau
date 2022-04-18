@@ -14,6 +14,15 @@ registry = wau.wl_display.get_registry(mydisplay)
 registry = mydisplay:get_registry()
 ```
 
+Because requests never return anything by themselves, they will return `self` in here to allow for method chaining (see @{layershell.lua}):
+
+```lua
+mywidget:set_anchor(Anchor.RIGHT + Anchor.TOP)
+        :set_margin(10, 10, 10, 10)
+        :set_size(width, height)
+        :add_listener { ["configure"] = wau.zwlr_layer_surface_v1.ack_configure }
+```
+
 ## events
 
 To connect to events, use the `add_listener` method. I personally prefer to put the event name in the lua string indexing syntax `["event_name"]` but I think in normal protocols that follow the naming conventions for events, that shouldn't be needed.

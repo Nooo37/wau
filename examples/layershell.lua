@@ -1,4 +1,4 @@
--- a simple layershell example
+--- a simple layershell example
 
 -- loading protocols
 
@@ -57,7 +57,9 @@ local Anchor = wau.zwlr_layer_surface_v1.Anchor
 mywidget:set_anchor(Anchor.RIGHT + Anchor.TOP)
         :set_margin(10, 10, 10, 10)
         :set_size(width, height)
-        :add_listener { ["configure"] = function(_, s) mywidget:ack_configure(s) end }
+        :add_listener { ["configure"] = wau.zwlr_layer_surface_v1.ack_configure }
+        -- Same thing as doing this:
+        --:add_listener { ["configure"] = function(self, s) self:ack_configure(s) end }
 
 surface:commit()
 display:roundtrip()

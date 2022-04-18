@@ -1,3 +1,8 @@
+--- All `wl_interface` that are loaded from protocols through `wau.require(x)` are all fields in the wau table.
+    -- For example `wau.wl_pointer` is the interface for a wayland pointer.
+-- @classmod wl_interface
+-- @alias M
+
 local ffi = require("cffi")
 local raw = require("wau.core.raw")
 
@@ -149,6 +154,10 @@ end
 
 function M.mt.__tostring(self)
     return ("<interface:%s:v%d>"):format(ffi.string(self.name), self.version)
+end
+
+function M.mt.__call()
+    return M.new()
 end
 
 ffi.metatype("struct wl_interface", M.mt)
