@@ -1,6 +1,7 @@
 project = "wau"
 title = "wau - wayland on lua"
 description = "Client-side libwayland bindings for lua"
+format = 'markdown'
 
 examples = {
     "examples",
