@@ -1,0 +1,192 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>wau - wayland on lua</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>wau</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Methods">Methods</a></li>
+</ul>
+
+
+<h2>Classes</h2>
+<ul class="nowrap">
+  <li><a href="../classes/wl_display.html">wl_display</a></li>
+  <li><a href="../classes/wl_interface.html">wl_interface</a></li>
+  <li><strong>wl_proxy</strong></li>
+  <li><a href="../classes/wl_cursor.html">wl_cursor</a></li>
+  <li><a href="../classes/wl_cursor_image.html">wl_cursor_image</a></li>
+  <li><a href="../classes/wl_cursor_theme.html">wl_cursor_theme</a></li>
+</ul>
+<h2>Protocols</h2>
+<ul class="nowrap">
+  <li><a href="../protocols/wayland.html">wayland</a></li>
+</ul>
+<h2>Manual</h2>
+<ul class="nowrap">
+  <li><a href="../manual/README.md.html">README</a></li>
+  <li><a href="../manual/coming-from-c.md.html">coming-from-c</a></li>
+  <li><a href="../manual/overview.md.html">overview</a></li>
+  <li><a href="../manual/scanner.md.html">scanner</a></li>
+</ul>
+<h2>Examples</h2>
+<ul class="nowrap">
+  <li><a href="../examples/foreign_toplevel_manager.lua.html">foreign_toplevel_manager.lua</a></li>
+  <li><a href="../examples/layershell.lua.html">layershell.lua</a></li>
+  <li><a href="../examples/list_globals.lua.html">list_globals.lua</a></li>
+  <li><a href="../examples/toplevel.lua.html">toplevel.lua</a></li>
+  <li><a href="../examples/xdg_top.lua.html">xdg_top.lua</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Class <code>wl_proxy</code></h1>
+<p>Every object you will encounter is actually a `wl_proxy` object with a different given set of methods (depending on its interface).</p>
+<p>
+ Thus it inherits all the `wl_proxy` methods - most notable the `add_listener` method.
+ The different/variable set of methods available to an object is defined by the <a href="../classes/wl_interface.html#">wl_interface</a> that the object has.
+ The "to string" behavior of a proxy follows the wayland convention (for example similar to `wl_registry@2`)</p>
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">local wau = require(&quot;wau&quot;)
+local display = wau.wl_display.connect(nil)
+local registry = display:get_registry()
+print(display:get_id(), display:get_class(), display) -- the ID of the dipslay is always 1
+print(registry:get_id(), registry:get_class(), registry)
+</pre>
+    </ul>
+
+
+<h2><a href="#Methods">Methods</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#wl_proxy:get_class">wl_proxy:get_class ()</a></td>
+	<td class="summary">Get the class of the proxy</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#wl_proxy:get_id">wl_proxy:get_id ()</a></td>
+	<td class="summary">Get the ID of the proxy</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#wl_proxy:add_listener">wl_proxy:add_listener (listener)</a></td>
+	<td class="summary">Add event listeners to the proxy.</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Methods"></a>Methods</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "wl_proxy:get_class"></a>
+    <strong>wl_proxy:get_class ()</strong>
+    </dt>
+    <dd>
+    Get the class of the proxy
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+        The class name
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "wl_proxy:get_id"></a>
+    <strong>wl_proxy:get_id ()</strong>
+    </dt>
+    <dd>
+    Get the ID of the proxy
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">int</span></span>
+        The ID of the proxy
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "wl_proxy:add_listener"></a>
+    <strong>wl_proxy:add_listener (listener)</strong>
+    </dt>
+    <dd>
+    Add event listeners to the proxy.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">listener</span>
+         A table of event listener functions whose key is the event name. The first parameter to the function is `self` (the object that received the event) followed by the parameters as specified in the protocol. For in action see  <a href="../classes/wl_interface.html#">wl_interface</a>
+ - test
+ - huch
+        </li>
+    </ul>
+
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">my_proxy:add_listener {
+   [<span class="string">"event_name"</span>] = <span class="keyword">function</span>(self, b) <span class="global">print</span>(b) <span class="keyword">end</span>,
+   [<span class="string">"another_event"</span>] = <span class="keyword">function</span>(self) <span class="global">error</span>(<span class="string">"hey"</span>) <span class="keyword">end</span>
+}</pre>
+    </ul>
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+<i style="float:right;">Last updated 2022-04-18 16:23:33 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

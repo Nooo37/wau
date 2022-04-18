@@ -1,0 +1,196 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>wau - wayland on lua</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>wau</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#1__Lua_can_emulate_object_oriented_programming">1. Lua can emulate object-oriented programming </a></li>
+<li><a href="#2__Lua_is_more_forgiving">2. Lua is more forgiving </a></li>
+</ul>
+
+
+<h2>Manual</h2>
+<ul class="nowrap">
+  <li><a href="../manual/README.md.html">README</a></li>
+  <li><strong>coming-from-c</strong></li>
+  <li><a href="../manual/overview.md.html">overview</a></li>
+  <li><a href="../manual/scanner.md.html">scanner</a></li>
+</ul>
+<h2>Protocols</h2>
+<ul class="nowrap">
+  <li><a href="../protocols/wayland.html">wayland</a></li>
+</ul>
+<h2>Classes</h2>
+<ul class="nowrap">
+  <li><a href="../classes/wl_display.html">wl_display</a></li>
+  <li><a href="../classes/wl_interface.html">wl_interface</a></li>
+  <li><a href="../classes/wl_proxy.html">wl_proxy</a></li>
+  <li><a href="../classes/wl_cursor.html">wl_cursor</a></li>
+  <li><a href="../classes/wl_cursor_image.html">wl_cursor_image</a></li>
+  <li><a href="../classes/wl_cursor_theme.html">wl_cursor_theme</a></li>
+</ul>
+<h2>Examples</h2>
+<ul class="nowrap">
+  <li><a href="../examples/foreign_toplevel_manager.lua.html">foreign_toplevel_manager.lua</a></li>
+  <li><a href="../examples/layershell.lua.html">layershell.lua</a></li>
+  <li><a href="../examples/list_globals.lua.html">list_globals.lua</a></li>
+  <li><a href="../examples/toplevel.lua.html">toplevel.lua</a></li>
+  <li><a href="../examples/xdg_top.lua.html">xdg_top.lua</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+    If you come from C and you did a little bit of wayland over there, you will find that most things are done very analogous.
+<p>Let's take a look at one of the most simple C libwayland examples straight from [the wayland book](https://wayland-book.com/registry/binding.html) - listing all globals:
+<p>```C
+#include <stdint.h>
+#include <stdio.h>
+#include <wayland-client.h>
+<p>static void
+registry_handle_global(void *data, struct wl_registry *registry,
+		uint32_t name, const char *interface, uint32_t version)
+{
+	printf("interface: '%s', version: %d, name: %d\n",
+			interface, version, name);
+}
+<p>static void
+registry_handle_global_remove(void *data, struct wl_registry *registry,
+		uint32_t name)
+{
+	// This space deliberately left blank
+}
+<p>static const struct wl_registry_listener
+registry_listener = {
+	.global = registry_handle_global,
+	.global_remove = registry_handle_global_remove,
+};
+<p>int
+main(int argc, char *argv[])
+{
+	struct wl_display *display = wl_display_connect(NULL);
+	struct wl_registry *registry = wl_display_get_registry(display);
+	wl_registry_add_listener(registry, &registry_listener, NULL);
+	wl_display_roundtrip(display);
+	return 0;
+}
+```
+<p># Direct translation
+<p>How would we achieve that with lua and wau?
+<p>First, we will translate the code above as accurately as possible to lua:
+<p>```lua
+local wau = require("wau")
+<p>local function registry_handle_global(registry, name, interface, version)
+    print("interface: " .. interface .. ", version: " .. tostring(version) .. ", name: " .. name)
+end
+<p>local function registry_handle_global_remove(registry, name)
+    -- This space deliberately left blank
+end
+<p>local registry_listener = {
+    ["global"] = registry_handle_global,
+    ["global_remove"] = registry_handle_global_remove
+}
+<p>local function main()
+    local display = wau.wl_display.connect(nil)
+    local registry = wau.wl_display.get_registry(display)
+    wau.wl_registry.add_listener(registry, registry_listener, nil)
+    wau.wl_display.roundtrip(display)
+    return 0
+end
+<p>main()
+```
+<p>That looks overly similar already. What are some differences?
+<p>- The callbacks don't get a data object handed to them
+- Well... that's about it, the rest is about conforming to luas language specifics
+<p># "Improvements"
+<p>Now there are some improvements we can make with that program to write more lua-style:
+<p>## 1. Lua can emulate object-oriented programming
+<p>If we got a wayland interface `wl_thing`, then all fields that are accessbile through `wau.wl_thing[key]`, are also accessible by an instance of the interface directly `mything[key]`.
+<p>So instead of doing `wau.wl_display.get_registry(display)`, we could do `display.get_registry(display)`. And if you know a little lua already, that is a case where the `:`-operator comes in handy. It's equivalent to `display:get_registry()`.
+<p>```diff
+    local display = wau.wl_display.connect(nil)
+-   local registry = wau.wl_display.get_registry(display)
++   local registry = display:get_registry()
+-   wau.wl_registry.add_listener(registry, registry_listener, nil)
++   registry:add_listener(registry_listener)
+-   wau.wl_display.roundtrip(display)
++   display:roundtrip()
+```
+<p>## 2. Lua is more forgiving
+<p>As a scripting language, lua let's you write more freely when doing your wayland work.
+<p>Take for example the `registry_listener`. In C, we need them to be `static const`. But in lua there is no need for them to be declared outside of the function.
+<p>```diff
+-   registry:add_listener(registry_listener)
++   registry:add_listener {
++       ["global"] = registry_handle_global,
++       ["global_remove"] = registry_handle_global_remove
++   }
+```
+<p>And even there, we can even inline the functions to which we are here referencing, if we really want to (of course there will be cases where it is more convenient to not do so).
+<p>```diff
+    registry:add_listener {
+-       ["global"] = registry_handle_global,
++       ["global"] = function(registry, name, interface, version)
++           print("interface: " .. interface .. ", version: " .. tostring(version) .. ", name: " .. name)
++       end,
+-       ["global_remove"] = registry_handle_global_remove
++       ["global_remove"] = function(registry, name)
++           -- This space deliberately left blank
++       end
+    }
+```
+<p>And of course, having a `main` function was more of an exercise in recreating the C code very precisly. We don't need that in lua, it will just start to execute the script starting from the top. So what we end up after all the refactors is the following:
+<p>```lua
+local wau = require("wau")
+<p>local display = wau.wl_display.connect(nil)
+local registry = display:get_registry()
+<p>registry:add_listener {
+    ["global"] = function(registry, name, interface, version)
+        print("interface: " .. interface .. ", version: " .. tostring(version) .. ", name: " .. name)
+    end,
+    ["global_remove"] = function(registry, name)
+        -- This space deliberately left blank
+    end
+}
+<p>display:roundtrip()
+```
+<p>
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+<i style="float:right;">Last updated 2022-04-18 16:23:33 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

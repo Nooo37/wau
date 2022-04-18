@@ -1,0 +1,171 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>wau - wayland on lua</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>wau</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+
+
+<h2>Examples</h2>
+<ul class="nowrap">
+  <li><a href="../examples/foreign_toplevel_manager.lua.html">foreign_toplevel_manager.lua</a></li>
+  <li><strong>layershell.lua</strong></li>
+  <li><a href="../examples/list_globals.lua.html">list_globals.lua</a></li>
+  <li><a href="../examples/toplevel.lua.html">toplevel.lua</a></li>
+  <li><a href="../examples/xdg_top.lua.html">xdg_top.lua</a></li>
+</ul>
+<h2>Protocols</h2>
+<ul class="nowrap">
+  <li><a href="../protocols/wayland.html">wayland</a></li>
+</ul>
+<h2>Classes</h2>
+<ul class="nowrap">
+  <li><a href="../classes/wl_display.html">wl_display</a></li>
+  <li><a href="../classes/wl_interface.html">wl_interface</a></li>
+  <li><a href="../classes/wl_proxy.html">wl_proxy</a></li>
+  <li><a href="../classes/wl_cursor.html">wl_cursor</a></li>
+  <li><a href="../classes/wl_cursor_image.html">wl_cursor_image</a></li>
+  <li><a href="../classes/wl_cursor_theme.html">wl_cursor_theme</a></li>
+</ul>
+<h2>Manual</h2>
+<ul class="nowrap">
+  <li><a href="../manual/README.md.html">README</a></li>
+  <li><a href="../manual/coming-from-c.md.html">coming-from-c</a></li>
+  <li><a href="../manual/overview.md.html">overview</a></li>
+  <li><a href="../manual/scanner.md.html">scanner</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+    <h2>layershell.lua</h2>
+<pre>
+<span class="comment">--- a simple layershell example
+</span>
+<span class="comment">-- loading protocols
+</span>
+<span class="keyword">local</span> wau = <span class="global">require</span>(<span class="string">"wau"</span>)
+wau:<span class="global">require</span>(<span class="string">"protocol.xdg-shell"</span>) <span class="comment">-- layershell implicitly depends on xdg-shell
+</span>wau:<span class="global">require</span>(<span class="string">"protocol.wlr-layer-shell-unstable-v1"</span>)
+
+<span class="comment">-- something we need later on
+</span>
+<span class="keyword">local</span> helpers = <span class="global">require</span>(<span class="string">"helpers"</span>) <span class="comment">-- helpers.so should be built already
+</span><span class="keyword">local</span> lgi = <span class="global">require</span>(<span class="string">"lgi"</span>)
+<span class="keyword">local</span> cairo = lgi.cairo
+
+<span class="comment">-- connecting to the server
+</span>
+<span class="keyword">local</span> display = wau.wl_display.connect()
+<span class="global">assert</span>(display, <span class="string">"Couldn't connect to the wayland server"</span>)
+
+<span class="comment">-- register globals
+</span>
+<span class="keyword">local</span> registry = display:get_registry()
+<span class="keyword">local</span> output, comp, shm, layershell
+
+registry:add_listener {
+    [<span class="string">"global"</span>] = <span class="keyword">function</span>(_, name, interface, version)
+        <span class="keyword">if</span> interface == <span class="string">"wl_output"</span> <span class="keyword">then</span>
+            output = registry:bind(name, wau.wl_output, version)
+        <span class="keyword">elseif</span> interface == <span class="string">"wl_compositor"</span> <span class="keyword">then</span>
+            comp = registry:bind(name, wau.wl_compositor, version)
+        <span class="keyword">elseif</span> interface == <span class="string">"wl_shm"</span> <span class="keyword">then</span>
+            shm = registry:bind(name, wau.wl_shm, version)
+        <span class="keyword">elseif</span> interface == <span class="string">"zwlr_layer_shell_v1"</span> <span class="keyword">then</span>
+            layershell = registry:bind(name, wau.zwlr_layer_shell_v1, version)
+        <span class="keyword">end</span>
+    <span class="keyword">end</span>
+}
+
+display:roundtrip()
+<span class="global">assert</span>(output <span class="keyword">and</span> comp <span class="keyword">and</span> shm, <span class="string">"Couldn't load wl_ output, compositor or shm"</span>)
+<span class="global">assert</span>(layershell, <span class="string">"Couldn't load layershell"</span>)
+
+<span class="comment">-- create the wl_surface and the layer shell surface
+</span>
+<span class="keyword">local</span> width = <span class="number">100</span>
+<span class="keyword">local</span> height = <span class="number">100</span>
+<span class="keyword">local</span> stride = width * <span class="number">4</span>
+<span class="keyword">local</span> size = stride * height
+
+<span class="keyword">local</span> surface = comp:create_surface()
+display:roundtrip()
+
+<span class="keyword">local</span> mywidget = layershell:get_layer_surface(surface, output,
+    wau.zwlr_layer_shell_v1.Layer.TOP, <span class="string">"epicwau"</span>)
+
+<span class="keyword">local</span> Anchor = wau.zwlr_layer_surface_v1.Anchor
+mywidget:set_anchor(Anchor.RIGHT + Anchor.TOP)
+        :set_margin(<span class="number">10</span>, <span class="number">10</span>, <span class="number">10</span>, <span class="number">10</span>)
+        :set_size(width, height)
+        :add_listener { [<span class="string">"configure"</span>] = wau.zwlr_layer_surface_v1.ack_configure }
+        <span class="comment">-- Same thing as doing this:
+</span>        <span class="comment">--:add_listener { ["configure"] = function(self, s) self:ack_configure(s) end }
+</span>
+surface:commit()
+display:roundtrip()
+
+<span class="comment">-- now that we got a surface, we need a buffer to attach to the surface
+</span>
+<span class="keyword">local</span> fd, data = helpers.allocate_shm(size)
+<span class="keyword">local</span> mypool = shm:create_pool(fd, size)
+<span class="keyword">local</span> mybuffer = mypool:create_buffer(<span class="number">0</span>, width, height, stride, <span class="number">0</span>)
+surface:attach(mybuffer, <span class="number">0</span>, <span class="number">0</span>)
+surface:commit()
+
+<span class="comment">-- and finally we need something to draw on the buffer
+</span>
+<span class="keyword">local</span> cairo_surface = cairo.ImageSurface.create_for_data(data,
+    cairo.Format.ARGB32, width, height, <span class="number">4</span> * width)
+<span class="keyword">local</span> cr = cairo.Context(cairo_surface)
+cr:set_source_rgba(<span class="number">1</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0.6</span>)
+cr:paint()
+
+<span class="comment">-- no surfaces were harmed during the making of this example
+</span>
+surface:damage(<span class="number">0</span>, <span class="number">0</span>, width, height)
+surface:commit()
+display:roundtrip()
+
+<span class="comment">-- our widget doesn't do anything so we can just sleep now
+</span>
+<span class="global">os</span>.execute(<span class="string">"sleep "</span> .. <span class="global">tostring</span>(<span class="number">1000</span> * <span class="number">2</span>))</pre>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+<i style="float:right;">Last updated 2022-04-18 16:23:33 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

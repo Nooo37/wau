@@ -1,0 +1,248 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>wau - wayland on lua</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>wau</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Fields">Fields</a></li>
+<li><a href="#Methods">Methods</a></li>
+</ul>
+
+
+<h2>Classes</h2>
+<ul class="nowrap">
+  <li><a href="../classes/wl_display.html">wl_display</a></li>
+  <li><a href="../classes/wl_interface.html">wl_interface</a></li>
+  <li><a href="../classes/wl_proxy.html">wl_proxy</a></li>
+  <li><strong>wl_cursor</strong></li>
+  <li><a href="../classes/wl_cursor_image.html">wl_cursor_image</a></li>
+  <li><a href="../classes/wl_cursor_theme.html">wl_cursor_theme</a></li>
+</ul>
+<h2>Protocols</h2>
+<ul class="nowrap">
+  <li><a href="../protocols/wayland.html">wayland</a></li>
+</ul>
+<h2>Manual</h2>
+<ul class="nowrap">
+  <li><a href="../manual/README.md.html">README</a></li>
+  <li><a href="../manual/coming-from-c.md.html">coming-from-c</a></li>
+  <li><a href="../manual/overview.md.html">overview</a></li>
+  <li><a href="../manual/scanner.md.html">scanner</a></li>
+</ul>
+<h2>Examples</h2>
+<ul class="nowrap">
+  <li><a href="../examples/foreign_toplevel_manager.lua.html">foreign_toplevel_manager.lua</a></li>
+  <li><a href="../examples/layershell.lua.html">layershell.lua</a></li>
+  <li><a href="../examples/list_globals.lua.html">list_globals.lua</a></li>
+  <li><a href="../examples/toplevel.lua.html">toplevel.lua</a></li>
+  <li><a href="../examples/xdg_top.lua.html">xdg_top.lua</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Class <code>wl_cursor</code></h1>
+<p>A `wl_cursor` represents a given cursor state (loading, clicking etc) in a given cursor theme.</p>
+<p>
+ A `wl_cursor` is accessed through a <a href="../classes/wl_cursor_theme.html#">wl_cursor_theme</a>.
+ You will access the <a href="../classes/wl_cursor_image.html#">wl_cursor_image</a>s from the cursor in question through the `image` property.</p>
+    <h3>See also:</h3>
+    <ul>
+         <a href="../examples/xdg_top.lua.html#">xdg_top.lua</a>
+    </ul>
+
+
+<h2><a href="#Fields">Fields</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#wl_cursor.image_count">wl_cursor.image_count</a></td>
+	<td class="summary">The number of images available</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#wl_cursor.image">wl_cursor.image</a></td>
+	<td class="summary">The images associated with the cursor</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#wl_cursor.name">wl_cursor.name</a></td>
+	<td class="summary">Name of the cursor</td>
+	</tr>
+</table>
+<h2><a href="#Methods">Methods</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#wl_cursor:frame">wl_cursor:frame (time)</a></td>
+	<td class="summary">Find the frame for a given elapsed time in a cursor animation given time in the cursor animation</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#wl_cursor:frame_and_duration">wl_cursor:frame_and_duration (time, duration)</a></td>
+	<td class="summary">Find the frame for a given elapsed time in a cursor animation as well as the time left until next cursor change.</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Fields"></a>Fields</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "wl_cursor.image_count"></a>
+    <strong>wl_cursor.image_count</strong>
+    </dt>
+    <dd>
+    The number of images available
+
+
+    <ul>
+        <li><span class="parameter">int</span>
+         The number of <a href="../classes/wl_cursor_image.html#">wl_cursor_image</a>s that this object possesses in its `image` field.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "wl_cursor.image"></a>
+    <strong>wl_cursor.image</strong>
+    </dt>
+    <dd>
+    The images associated with the cursor
+
+
+    <ul>
+        <li><span class="parameter">wl_cursor_image</span>
+        ,...} A list of <a href="../classes/wl_cursor_image.html#">wl_cursor_image</a>s. There are <a href="../classes/wl_cursor.html#wl_cursor.image_count">image_count</a> many images in this list.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "wl_cursor.name"></a>
+    <strong>wl_cursor.name</strong>
+    </dt>
+    <dd>
+    Name of the cursor
+
+
+    <ul>
+        <li><span class="parameter">string</span>
+         The name of the cursor.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="Methods"></a>Methods</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "wl_cursor:frame"></a>
+    <strong>wl_cursor:frame (time)</strong>
+    </dt>
+    <dd>
+    Find the frame for a given elapsed time in a cursor animation given time in the cursor animation
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">time</span>
+            <span class="types"><span class="type">int</span></span>
+         Elapsed time in ms since the beginning of the animation
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">int</span></span>
+        The index of the image in the <a href="../classes/wl_cursor.html#wl_cursor.image">image</a> field that should be displayed for the given time in the cursor animation
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "wl_cursor:frame_and_duration"></a>
+    <strong>wl_cursor:frame_and_duration (time, duration)</strong>
+    </dt>
+    <dd>
+    Find the frame for a given elapsed time in a cursor animation as well as the time left until next cursor change.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">time</span>
+            <span class="types"><span class="type">int</span></span>
+         Elapsed time in ms since the beginning of the animation
+        </li>
+        <li><span class="parameter">duration</span>
+            <span class="types"><span class="type">int</span></span>
+         pointer to uint32_t to store time left for this image or zero if the cursor won't change.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">int</span></span>
+        The index of the image in the <a href="../classes/wl_cursor.html#wl_cursor.image">image</a> field that should be displayed for the given time in the cursor animation
+    </ol>
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+<i style="float:right;">Last updated 2022-04-18 16:23:33 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

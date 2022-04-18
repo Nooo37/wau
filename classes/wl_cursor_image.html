@@ -1,0 +1,254 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>wau - wayland on lua</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>wau</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Fields">Fields</a></li>
+<li><a href="#Methods">Methods</a></li>
+</ul>
+
+
+<h2>Classes</h2>
+<ul class="nowrap">
+  <li><a href="../classes/wl_display.html">wl_display</a></li>
+  <li><a href="../classes/wl_interface.html">wl_interface</a></li>
+  <li><a href="../classes/wl_proxy.html">wl_proxy</a></li>
+  <li><a href="../classes/wl_cursor.html">wl_cursor</a></li>
+  <li><strong>wl_cursor_image</strong></li>
+  <li><a href="../classes/wl_cursor_theme.html">wl_cursor_theme</a></li>
+</ul>
+<h2>Protocols</h2>
+<ul class="nowrap">
+  <li><a href="../protocols/wayland.html">wayland</a></li>
+</ul>
+<h2>Manual</h2>
+<ul class="nowrap">
+  <li><a href="../manual/README.md.html">README</a></li>
+  <li><a href="../manual/coming-from-c.md.html">coming-from-c</a></li>
+  <li><a href="../manual/overview.md.html">overview</a></li>
+  <li><a href="../manual/scanner.md.html">scanner</a></li>
+</ul>
+<h2>Examples</h2>
+<ul class="nowrap">
+  <li><a href="../examples/foreign_toplevel_manager.lua.html">foreign_toplevel_manager.lua</a></li>
+  <li><a href="../examples/layershell.lua.html">layershell.lua</a></li>
+  <li><a href="../examples/list_globals.lua.html">list_globals.lua</a></li>
+  <li><a href="../examples/toplevel.lua.html">toplevel.lua</a></li>
+  <li><a href="../examples/xdg_top.lua.html">xdg_top.lua</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Class <code>wl_cursor_image</code></h1>
+<p>A `wl_cursor_image` represents a single cursor image (for example a single frame in a loading cursor animation).</p>
+<p>
+ You can access a cursor image through a `wl_cursor`s image property.</p>
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">-- if mycursor is a wl_cursor
+local cursor_image = mycursor.image[idx]
+local buffer = cursor_image:get_buffer()
+</pre>
+    </ul>
+
+
+<h2><a href="#Fields">Fields</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#wl_cursor_image.width">wl_cursor_image.width</a></td>
+	<td class="summary">Actual width</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#wl_cursor_image.height">wl_cursor_image.height</a></td>
+	<td class="summary">Actual height</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#wl_cursor_image.hotspot_x">wl_cursor_image.hotspot_x</a></td>
+	<td class="summary">Hot spot x (must be inside image)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#wl_cursor_image.hotspot_y">wl_cursor_image.hotspot_y</a></td>
+	<td class="summary">Hot spot y (must be inside image)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#wl_cursor_image.delay">wl_cursor_image.delay</a></td>
+	<td class="summary">Animation delay to next frame (ms)</td>
+	</tr>
+</table>
+<h2><a href="#Methods">Methods</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#wl_cursor_image:get_buffer">wl_cursor_image:get_buffer ()</a></td>
+	<td class="summary">Get an shm buffer for a cursor image</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Fields"></a>Fields</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "wl_cursor_image.width"></a>
+    <strong>wl_cursor_image.width</strong>
+    </dt>
+    <dd>
+    Actual width
+
+
+    <ul>
+        <li><span class="parameter">int</span>
+         Actual width
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "wl_cursor_image.height"></a>
+    <strong>wl_cursor_image.height</strong>
+    </dt>
+    <dd>
+    Actual height
+
+
+    <ul>
+        <li><span class="parameter">int</span>
+         Actual height
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "wl_cursor_image.hotspot_x"></a>
+    <strong>wl_cursor_image.hotspot_x</strong>
+    </dt>
+    <dd>
+    Hot spot x (must be inside image)
+
+
+    <ul>
+        <li><span class="parameter">int</span>
+         Hot spot x (must be inside image)
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "wl_cursor_image.hotspot_y"></a>
+    <strong>wl_cursor_image.hotspot_y</strong>
+    </dt>
+    <dd>
+    Hot spot y (must be inside image)
+
+
+    <ul>
+        <li><span class="parameter">int</span>
+         Hot spot y (must be inside image)
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "wl_cursor_image.delay"></a>
+    <strong>wl_cursor_image.delay</strong>
+    </dt>
+    <dd>
+    Animation delay to next frame (ms)
+
+
+    <ul>
+        <li><span class="parameter">int</span>
+         Animation delay to next frame (ms)
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="Methods"></a>Methods</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "wl_cursor_image:get_buffer"></a>
+    <strong>wl_cursor_image:get_buffer ()</strong>
+    </dt>
+    <dd>
+    Get an shm buffer for a cursor image
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">wl_shm</span></span>
+        An shm buffer for the cursor image. The user should not destroy the returned buffer.
+    </ol>
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+<i style="float:right;">Last updated 2022-04-18 16:23:33 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

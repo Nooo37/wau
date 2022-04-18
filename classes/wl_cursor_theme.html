@@ -1,0 +1,210 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>wau - wayland on lua</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>wau</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Methods">Methods</a></li>
+</ul>
+
+
+<h2>Classes</h2>
+<ul class="nowrap">
+  <li><a href="../classes/wl_display.html">wl_display</a></li>
+  <li><a href="../classes/wl_interface.html">wl_interface</a></li>
+  <li><a href="../classes/wl_proxy.html">wl_proxy</a></li>
+  <li><a href="../classes/wl_cursor.html">wl_cursor</a></li>
+  <li><a href="../classes/wl_cursor_image.html">wl_cursor_image</a></li>
+  <li><strong>wl_cursor_theme</strong></li>
+</ul>
+<h2>Protocols</h2>
+<ul class="nowrap">
+  <li><a href="../protocols/wayland.html">wayland</a></li>
+</ul>
+<h2>Manual</h2>
+<ul class="nowrap">
+  <li><a href="../manual/README.md.html">README</a></li>
+  <li><a href="../manual/coming-from-c.md.html">coming-from-c</a></li>
+  <li><a href="../manual/overview.md.html">overview</a></li>
+  <li><a href="../manual/scanner.md.html">scanner</a></li>
+</ul>
+<h2>Examples</h2>
+<ul class="nowrap">
+  <li><a href="../examples/foreign_toplevel_manager.lua.html">foreign_toplevel_manager.lua</a></li>
+  <li><a href="../examples/layershell.lua.html">layershell.lua</a></li>
+  <li><a href="../examples/list_globals.lua.html">list_globals.lua</a></li>
+  <li><a href="../examples/toplevel.lua.html">toplevel.lua</a></li>
+  <li><a href="../examples/xdg_top.lua.html">xdg_top.lua</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Class <code>wl_cursor_theme</code></h1>
+<p>A `wl_cursor_theme` is a set of <a href="../classes/wl_cursor.html#">wl_cursor</a>s with a unified appearance.</p>
+<p>
+ Thus the normal workflow is to load a cursor theme through <a href="../classes/wl_cursor_theme.html#wl_cursor_theme:load">load</a>
+ and to then retrieve the needed <a href="../classes/wl_cursor.html#">wl_cursor</a> through <a href="../classes/wl_cursor_theme.html#wl_cursor_theme:get_cursor">get_cursor</a>.
+ Once you got a `wl_cursor`, you can access its <a href="../classes/wl_cursor_image.html#">wl_cursor_image</a>s through
+ the <a href="../classes/wl_cursor.html#wl_cursor.image">wl_cursor.image</a> property. Then you can get the images buffer
+ with the <a href="../classes/wl_cursor_image.html#wl_cursor_image:get_buffer">wl_cursor_image.get_buffer</a> method. After that you can attach the
+ buffer to a surface and run `set_cursor` on the surface whose cursor you want
+ to set.
+<p> You can look up on how it can be done in the <a href="../examples/xdg_top.lua.html#">xdg_top.lua</a> example.</p>
+    <h3>See also:</h3>
+    <ul>
+         <a href="../examples/xdg_top.lua.html#">xdg_top.lua</a>
+    </ul>
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">local ctheme = wau.wl_cursor_theme.load(nil, 24, shm)
+local cursor = ctheme:get_cursor(&quot;cross&quot;)
+</pre>
+    </ul>
+
+
+<h2><a href="#Methods">Methods</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#wl_cursor_theme:load">wl_cursor_theme:load (name, size, shm)</a></td>
+	<td class="summary">Load a cursor theme to memory shared with the compositor</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#wl_cursor_theme:destroy">wl_cursor_theme:destroy ()</a></td>
+	<td class="summary">Destroys a cursor theme object</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#wl_cursor_theme:get_cursor">wl_cursor_theme:get_cursor (name)</a></td>
+	<td class="summary">Get the cursor for a given name from a cursor theme</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Methods"></a>Methods</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "wl_cursor_theme:load"></a>
+    <strong>wl_cursor_theme:load (name, size, shm)</strong>
+    </dt>
+    <dd>
+    Load a cursor theme to memory shared with the compositor
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">name</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         The name of the cursor theme to load. If `nil`, the default theme will be loaded.
+        </li>
+        <li><span class="parameter">size</span>
+            <span class="types"><span class="type">int</span></span>
+         Desired size of the cursor images.
+        </li>
+        <li><span class="parameter">shm</span>
+            <span class="types"><span class="type">wl_shm</span></span>
+         The compositor's shm interface.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">wl_cursor_theme</span></span>
+        An object representing the theme that
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">-- issue with ldoc: This is a static function / constructor and not a method
+</span><span class="keyword">local</span> ctheme = wau.wl_cursor_theme.<span class="global">load</span>(name, size, shm)</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "wl_cursor_theme:destroy"></a>
+    <strong>wl_cursor_theme:destroy ()</strong>
+    </dt>
+    <dd>
+    Destroys a cursor theme object
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "wl_cursor_theme:get_cursor"></a>
+    <strong>wl_cursor_theme:get_cursor (name)</strong>
+    </dt>
+    <dd>
+    Get the cursor for a given name from a cursor theme
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">name</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.4">string</a></span>
+         Name of the desired cursor
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">wl_cursor</span></span>
+        The theme's cursor of the given name or %NULL if there is no such cursor
+    </ol>
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+<i style="float:right;">Last updated 2022-04-18 16:23:33 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>
