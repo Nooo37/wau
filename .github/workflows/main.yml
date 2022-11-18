@@ -48,7 +48,7 @@ jobs:
           mkdir -p $XDG_RUNTIME_DIR
           chmod 0700 $XDG_RUNTIME_DIR
           sway -d &
-          sleep 2
+          sleep 20
           cd tests
           ./run.sh
           swaymsg exit || true
