@@ -44,10 +44,10 @@ jobs:
           WLR_LIBINPUT_NO_DEVICES: 1
           GTK_USE_PORTAL: 0
         run: |
-          adduser --disabled-password --gecos "" greg
+          sudo adduser --disabled-password --gecos "" greg
           export XDG_RUNTIME_DIR=/tmp/runtime
           sudo -Eu greg mkdir -p $XDG_RUNTIME_DIR
-          chmod 0700 $XDG_RUNTIME_DIR
+          sudo chmod 0700 $XDG_RUNTIME_DIR
           sudo -Eu greg sway -d &
           sleep 2
           cd tests
