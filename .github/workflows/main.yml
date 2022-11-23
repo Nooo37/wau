@@ -22,7 +22,7 @@ jobs:
       - name: Install dependencies through apt
         run: |
           sudo apt install -y --no-install-recommends \
-            sway \
+            sway mutter \
             liblua5.3-dev libwayland-dev \
             meson ninja-build cmake
           lua -v
