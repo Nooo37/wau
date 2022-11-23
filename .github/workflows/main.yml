@@ -37,7 +37,7 @@ jobs:
           ninja all
           cp cffi.so ../..
 
-      - name: Run Tests on SWAY
+      - name: Tests on SWAY
         env:
           WLR_BACKENDS: headless
           WLR_RENDERER: pixman
@@ -53,13 +53,14 @@ jobs:
           ./run.sh
           swaymsg exit || true
 
-      - name: Run Tests on MUTTER
+      - name: Tests on MUTTER
         run: |
           export XDG_RUNTIME_DIR=/tmp/runtime
           mkdir -p $XDG_RUNTIME_DIR
           chmod 0700 $XDG_RUNTIME_DIR
-          mutter --wayland --headless
+          mutter --wayland --sm-disable
           sleep 10
           cd tests
           ./run.sh
           pkill mutter
+
