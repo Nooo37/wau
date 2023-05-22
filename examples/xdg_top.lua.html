@@ -26,6 +26,7 @@
 <br/>
 <h1>wau</h1>
 
+
 <ul>
   <li><a href="../index.html">Index</a></li>
 </ul>
@@ -77,8 +78,8 @@ wau:<span class="global">require</span>(<span class="string">"protocol.xdg-shell
 <span class="keyword">local</span> GLib = lgi.GLib
 <span class="keyword">local</span> cairo = lgi.cairo
 
-<span class="keyword">local</span> display = wau.wl_display.connect()
-<span class="keyword">local</span> registry = display:get_registry()
+<span class="keyword">local</span> display = wau.wl_display.<span class="function-name">connect</span>()
+<span class="keyword">local</span> registry = display:<span class="function-name">get_registry</span>()
 
 <span class="keyword">local</span> width = <span class="number">200</span>
 <span class="keyword">local</span> height = <span class="number">200</span>
@@ -88,142 +89,142 @@ wau:<span class="global">require</span>(<span class="string">"protocol.xdg-shell
 <span class="comment">-- registering globals; the usual stuff
 </span>
 <span class="keyword">local</span> compositor, seat, shm, xdg, output
-registry:add_listener {
+registry:<span class="function-name">add_listener</span> {
     [<span class="string">"global"</span>] = <span class="keyword">function</span>(_, name, interface, version)
         <span class="keyword">if</span> interface == <span class="string">"wl_output"</span> <span class="keyword">then</span>
-            output = registry:bind(name, wau.wl_output, version)
+            output = registry:<span class="function-name">bind</span>(name, wau.wl_output, version)
         <span class="keyword">elseif</span> interface == <span class="string">"wl_compositor"</span> <span class="keyword">then</span>
-            compositor = registry:bind(name, wau.wl_compositor, version)
+            compositor = registry:<span class="function-name">bind</span>(name, wau.wl_compositor, version)
         <span class="keyword">elseif</span> interface == <span class="string">"wl_shm"</span> <span class="keyword">then</span>
-            shm = registry:bind(name, wau.wl_shm, version)
+            shm = registry:<span class="function-name">bind</span>(name, wau.wl_shm, version)
         <span class="keyword">elseif</span> interface == <span class="string">"wl_seat"</span> <span class="keyword">then</span>
-            seat = registry:bind(name, wau.wl_seat, version)
+            seat = registry:<span class="function-name">bind</span>(name, wau.wl_seat, version)
         <span class="keyword">elseif</span> interface == <span class="string">"xdg_wm_base"</span> <span class="keyword">then</span>
-            xdg = registry:bind(name, wau.xdg_wm_base, version)
-            xdg:add_listener { [<span class="string">"ping"</span>] = wau.xdg_wm_base.pong }
+            xdg = registry:<span class="function-name">bind</span>(name, wau.xdg_wm_base, version)
+            xdg:<span class="function-name">add_listener</span> { [<span class="string">"ping"</span>] = wau.xdg_wm_base.pong }
         <span class="keyword">end</span>
     <span class="keyword">end</span>
 }
-display:roundtrip()
+display:<span class="function-name">roundtrip</span>()
 <span class="global">assert</span>(compositor <span class="keyword">and</span> shm <span class="keyword">and</span> seat <span class="keyword">and</span> output <span class="keyword">and</span> xdg, <span class="string">"Couldn't load globals"</span>)
 
 <span class="comment">-- get cursor surfaces by name
 </span>
-<span class="keyword">local</span> <span class="keyword">function</span> get_cursor_surface(name)
+<span class="keyword">local</span> <span class="keyword">function</span> <span class="function-name">get_cursor_surface</span>(name)
     <span class="keyword">local</span> cursor_theme = wau.wl_cursor_theme.<span class="global">load</span>(<span class="keyword">nil</span>, <span class="number">24</span>, shm)
-    <span class="keyword">local</span> cursor = cursor_theme:get_cursor(name)
+    <span class="keyword">local</span> cursor = cursor_theme:<span class="function-name">get_cursor</span>(name)
     <span class="keyword">local</span> cursor_image = cursor.images[<span class="number">0</span>]
-    <span class="keyword">local</span> cursor_buffer = cursor_image:get_buffer()
-    <span class="keyword">local</span> cursor_surface = compositor:create_surface()
-    cursor_surface:attach(cursor_buffer, <span class="number">0</span>, <span class="number">0</span>)
-    cursor_surface:commit()
+    <span class="keyword">local</span> cursor_buffer = cursor_image:<span class="function-name">get_buffer</span>()
+    <span class="keyword">local</span> cursor_surface = compositor:<span class="function-name">create_surface</span>()
+    cursor_surface:<span class="function-name">attach</span>(cursor_buffer, <span class="number">0</span>, <span class="number">0</span>)
+    cursor_surface:<span class="function-name">commit</span>()
     <span class="keyword">return</span> cursor_surface, cursor_image
 <span class="keyword">end</span>
 
 <span class="comment">-- a dumb example of handeling input + setting the cursor
 </span>
-<span class="keyword">local</span> cursor_surface, cursor_image = get_cursor_surface(<span class="string">"cross"</span>)
+<span class="keyword">local</span> cursor_surface, cursor_image = <span class="function-name">get_cursor_surface</span>(<span class="string">"cross"</span>)
 
-<span class="keyword">local</span> <span class="keyword">function</span> dumb_log(eventname)
+<span class="keyword">local</span> <span class="keyword">function</span> <span class="function-name">dumb_log</span>(eventname)
     <span class="keyword">return</span> <span class="keyword">function</span>(...) <span class="global">print</span>(eventname, ...) <span class="keyword">end</span>
 <span class="keyword">end</span>
 
 <span class="keyword">local</span> pointer_listener = {
-    [<span class="string">"motion"</span>] = dumb_log(<span class="string">"pointer motion"</span>),
-    [<span class="string">"button"</span>] = dumb_log(<span class="string">"pointer click"</span>),
-    [<span class="string">"axis"</span>] = dumb_log(<span class="string">"pointer axis"</span>),
-    [<span class="string">"leave"</span>] = dumb_log(<span class="string">"pointer leave"</span>),
+    [<span class="string">"motion"</span>] = <span class="function-name">dumb_log</span>(<span class="string">"pointer motion"</span>),
+    [<span class="string">"button"</span>] = <span class="function-name">dumb_log</span>(<span class="string">"pointer click"</span>),
+    [<span class="string">"axis"</span>] = <span class="function-name">dumb_log</span>(<span class="string">"pointer axis"</span>),
+    [<span class="string">"leave"</span>] = <span class="function-name">dumb_log</span>(<span class="string">"pointer leave"</span>),
     [<span class="string">"enter"</span>] = <span class="keyword">function</span>(self, serial, surface, x, y)
         <span class="comment">-- set the cursor, otherwise it is undefined and up to the compositor
-</span>        self:set_cursor(serial, cursor_surface, cursor_image.hotspot_x,
+</span>        self:<span class="function-name">set_cursor</span>(serial, cursor_surface, cursor_image.hotspot_x,
             cursor_image.hotspot_y)
-        dumb_log(<span class="string">"pointer enter"</span>)(self, serial, surface, x, y)
+        <span class="function-name">dumb_log</span>(<span class="string">"pointer enter"</span>)(self, serial, surface, x, y)
     <span class="keyword">end</span>,
 }
 
 <span class="keyword">local</span> keyboard_listener = {
-    [<span class="string">"key"</span>] = dumb_log(<span class="string">"keyboard key"</span>),
-    [<span class="string">"enter"</span>] = dumb_log(<span class="string">"keyboard focus"</span>),
-    [<span class="string">"leave"</span>] = dumb_log(<span class="string">"keyboard leave"</span>),
+    [<span class="string">"key"</span>] = <span class="function-name">dumb_log</span>(<span class="string">"keyboard key"</span>),
+    [<span class="string">"enter"</span>] = <span class="function-name">dumb_log</span>(<span class="string">"keyboard focus"</span>),
+    [<span class="string">"leave"</span>] = <span class="function-name">dumb_log</span>(<span class="string">"keyboard leave"</span>),
 }
 
-seat:add_listener {
+seat:<span class="function-name">add_listener</span> {
     [<span class="string">"capabilities"</span>] = <span class="keyword">function</span>(_, c)
         <span class="keyword">if</span> c &amp; wau.wl_seat.Capability.POINTER ~= <span class="number">0</span> <span class="keyword">then</span>
-            <span class="keyword">local</span> pointer = seat:get_pointer()
-            pointer:add_listener(pointer_listener)
+            <span class="keyword">local</span> pointer = seat:<span class="function-name">get_pointer</span>()
+            pointer:<span class="function-name">add_listener</span>(pointer_listener)
         <span class="keyword">end</span>
         <span class="keyword">if</span> c &amp; wau.wl_seat.Capability.KEYBOARD ~= <span class="number">0</span> <span class="keyword">then</span>
-            <span class="keyword">local</span> keyboard = seat:get_keyboard()
-            keyboard:add_listener(keyboard_listener)
+            <span class="keyword">local</span> keyboard = seat:<span class="function-name">get_keyboard</span>()
+            keyboard:<span class="function-name">add_listener</span>(keyboard_listener)
         <span class="keyword">end</span>
     <span class="keyword">end</span>
 }
 
 <span class="comment">-- getting our dummy buffer
 </span>
-<span class="keyword">local</span> <span class="keyword">function</span> get_buffer()
-    <span class="keyword">local</span> fd, data = helpers.allocate_shm(size)
-    <span class="keyword">local</span> mypool = shm:create_pool(fd, size)
-    <span class="keyword">local</span> mybuffer = mypool:create_buffer(<span class="number">0</span>, width, height, stride, <span class="number">0</span>)
-    <span class="keyword">local</span> cairo_surface = cairo.ImageSurface.create_for_data(data,
+<span class="keyword">local</span> <span class="keyword">function</span> <span class="function-name">get_buffer</span>()
+    <span class="keyword">local</span> fd, data = helpers.<span class="function-name">allocate_shm</span>(size)
+    <span class="keyword">local</span> mypool = shm:<span class="function-name">create_pool</span>(fd, size)
+    <span class="keyword">local</span> mybuffer = mypool:<span class="function-name">create_buffer</span>(<span class="number">0</span>, width, height, stride, <span class="number">0</span>)
+    <span class="keyword">local</span> cairo_surface = cairo.ImageSurface.<span class="function-name">create_for_data</span>(data,
         cairo.Format.ARGB32, width, height, <span class="number">4</span> * width)
-    <span class="keyword">local</span> cr = cairo.Context(cairo_surface)
-    cr:set_source_rgba(<span class="number">1</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0.6</span>)
-    cr:paint()
+    <span class="keyword">local</span> cr = cairo.<span class="function-name">Context</span>(cairo_surface)
+    cr:<span class="function-name">set_source_rgba</span>(<span class="number">1</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0.6</span>)
+    cr:<span class="function-name">paint</span>()
     <span class="keyword">return</span> mybuffer
 <span class="keyword">end</span>
 
 <span class="comment">-- setting up the window
 </span>
-<span class="keyword">local</span> mainloop = GLib.MainLoop(<span class="keyword">nil</span>, <span class="keyword">nil</span>)
+<span class="keyword">local</span> mainloop = GLib.<span class="function-name">MainLoop</span>(<span class="keyword">nil</span>, <span class="keyword">nil</span>)
 <span class="keyword">local</span> running = <span class="keyword">true</span>
 
-<span class="keyword">local</span> surface = compositor:create_surface()
-surface:add_listener {
-    [<span class="string">"enter"</span>] = dumb_log(<span class="string">"surface enters"</span>),
-    [<span class="string">"leave"</span>] = dumb_log(<span class="string">"surface leaves"</span>),
+<span class="keyword">local</span> surface = compositor:<span class="function-name">create_surface</span>()
+surface:<span class="function-name">add_listener</span> {
+    [<span class="string">"enter"</span>] = <span class="function-name">dumb_log</span>(<span class="string">"surface enters"</span>),
+    [<span class="string">"leave"</span>] = <span class="function-name">dumb_log</span>(<span class="string">"surface leaves"</span>),
 }
 
-<span class="keyword">local</span> xdg_surface = xdg:get_xdg_surface(surface)
-xdg_surface:add_listener {
+<span class="keyword">local</span> xdg_surface = xdg:<span class="function-name">get_xdg_surface</span>(surface)
+xdg_surface:<span class="function-name">add_listener</span> {
     [<span class="string">"configure"</span>] = <span class="keyword">function</span>(self, s)
-        self:ack_configure(s)
-        <span class="keyword">local</span> mybuffer = get_buffer()
-        surface:attach(mybuffer, <span class="number">0</span>, <span class="number">0</span>)
-        surface:commit()
+        self:<span class="function-name">ack_configure</span>(s)
+        <span class="keyword">local</span> mybuffer = <span class="function-name">get_buffer</span>()
+        surface:<span class="function-name">attach</span>(mybuffer, <span class="number">0</span>, <span class="number">0</span>)
+        surface:<span class="function-name">commit</span>()
     <span class="keyword">end</span>,
 }
 
-<span class="keyword">local</span> xdg_toplevel = xdg_surface:get_toplevel()
-xdg_toplevel:add_listener {
+<span class="keyword">local</span> xdg_toplevel = xdg_surface:<span class="function-name">get_toplevel</span>()
+xdg_toplevel:<span class="function-name">add_listener</span> {
     [<span class="string">"close"</span>]= <span class="keyword">function</span>(self)
-        self:destroy()
-        xdg_surface:destroy()
+        self:<span class="function-name">destroy</span>()
+        xdg_surface:<span class="function-name">destroy</span>()
         running = <span class="keyword">false</span>
-        mainloop:quit()
+        mainloop:<span class="function-name">quit</span>()
     <span class="keyword">end</span>
 }
-xdg_toplevel:set_title(<span class="string">"🐶 wau"</span>)
-            :set_app_id(<span class="string">"org.no37.beispiel"</span>)
+xdg_toplevel:<span class="function-name">set_title</span>(<span class="string">"🐶 wau"</span>)
+            :<span class="function-name">set_app_id</span>(<span class="string">"org.no37.beispiel"</span>)
 
-surface:commit()
+surface:<span class="function-name">commit</span>()
 
 <span class="comment">-- a more sane example of an actual mainloop, no <code>while true</code>
 </span>
-GLib.timeout_add(GLib.PRIORITY_DEFAULT, <span class="number">20</span>, <span class="keyword">function</span>()
-    display:roundtrip()
+GLib.<span class="function-name">timeout_add</span>(GLib.PRIORITY_DEFAULT, <span class="number">20</span>, <span class="keyword">function</span>()
+    display:<span class="function-name">roundtrip</span>()
     <span class="keyword">return</span> running
 <span class="keyword">end</span>)
 
-mainloop:run()</pre>
+mainloop:<span class="function-name">run</span>()</pre>
 
 
 </div> <!-- id="content" -->
 </div> <!-- id="main" -->
 <div id="about">
-<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
-<i style="float:right;">Last updated 2022-11-18 22:14:59 </i>
+<i>generated by <a href="http://github.com/lunarmodules/LDoc">LDoc 1.5.0</a></i>
+<i style="float:right;">Last updated 2023-05-22 19:13:31 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>

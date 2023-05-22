@@ -26,6 +26,7 @@
 <br/>
 <h1>wau</h1>
 
+
 <ul>
   <li><a href="../index.html">Index</a></li>
 </ul>
@@ -81,8 +82,8 @@ wau:<span class="global">require</span>(<span class="string">"protocol.xdg-shell
 
 <span class="comment">-- connect + basic vars
 </span>
-<span class="keyword">local</span> display = wau.wl_display.connect()
-<span class="keyword">local</span> registry = display:get_registry()
+<span class="keyword">local</span> display = wau.wl_display.<span class="function-name">connect</span>()
+<span class="keyword">local</span> registry = display:<span class="function-name">get_registry</span>()
 
 <span class="keyword">local</span> width = <span class="number">200</span>
 <span class="keyword">local</span> height = <span class="number">200</span>
@@ -92,22 +93,22 @@ wau:<span class="global">require</span>(<span class="string">"protocol.xdg-shell
 <span class="comment">-- registering globals; the usual stuff
 </span>
 <span class="keyword">local</span> comp, seat, shm, xdg, output
-registry:add_listener {
+registry:<span class="function-name">add_listener</span> {
     [<span class="string">"global"</span>] = <span class="keyword">function</span>(_, name, interface, version)
         <span class="keyword">if</span> interface == <span class="string">"wl_output"</span> <span class="keyword">then</span>
-            output = registry:bind(name, wau.wl_output, version)
+            output = registry:<span class="function-name">bind</span>(name, wau.wl_output, version)
         <span class="keyword">elseif</span> interface == <span class="string">"wl_compositor"</span> <span class="keyword">then</span>
-            comp = registry:bind(name, wau.wl_compositor, version)
+            comp = registry:<span class="function-name">bind</span>(name, wau.wl_compositor, version)
         <span class="keyword">elseif</span> interface == <span class="string">"wl_shm"</span> <span class="keyword">then</span>
-            shm = registry:bind(name, wau.wl_shm, version)
+            shm = registry:<span class="function-name">bind</span>(name, wau.wl_shm, version)
         <span class="keyword">elseif</span> interface == <span class="string">"wl_seat"</span> <span class="keyword">then</span>
-            seat = registry:bind(name, wau.wl_seat, version)
+            seat = registry:<span class="function-name">bind</span>(name, wau.wl_seat, version)
         <span class="keyword">elseif</span> interface == <span class="string">"xdg_wm_base"</span> <span class="keyword">then</span>
-            xdg = registry:bind(name, wau.xdg_wm_base, version)
+            xdg = registry:<span class="function-name">bind</span>(name, wau.xdg_wm_base, version)
         <span class="keyword">end</span>
     <span class="keyword">end</span>
 }
-display:roundtrip()
+display:<span class="function-name">roundtrip</span>()
 <span class="global">assert</span>(comp <span class="keyword">and</span> shm <span class="keyword">and</span> seat <span class="keyword">and</span> output <span class="keyword">and</span> xdg, <span class="string">"Couldn't load globals"</span>)
 
 <span class="comment">-- a dumb example of handeling input
@@ -121,72 +122,72 @@ display:roundtrip()
     [<span class="string">"key"</span>] = <span class="keyword">function</span>(...) <span class="global">print</span>(<span class="string">"key"</span>, ...) <span class="keyword">end</span>
 }
 
-seat:add_listener {
+seat:<span class="function-name">add_listener</span> {
     [<span class="string">"capabilities"</span>] = <span class="keyword">function</span>(_, c)
         <span class="keyword">if</span> c &amp; wau.wl_seat.Capability.POINTER ~= <span class="number">0</span> <span class="keyword">then</span>
-            <span class="keyword">local</span> pointer = seat:get_pointer()
-            pointer:add_listener(pointer_listener)
+            <span class="keyword">local</span> pointer = seat:<span class="function-name">get_pointer</span>()
+            pointer:<span class="function-name">add_listener</span>(pointer_listener)
         <span class="keyword">end</span>
         <span class="keyword">if</span> c &amp; wau.wl_seat.Capability.KEYBOARD ~= <span class="number">0</span> <span class="keyword">then</span>
-            <span class="keyword">local</span> keyboard = seat:get_keyboard()
-            keyboard:add_listener(kb_listener)
+            <span class="keyword">local</span> keyboard = seat:<span class="function-name">get_keyboard</span>()
+            keyboard:<span class="function-name">add_listener</span>(kb_listener)
         <span class="keyword">end</span>
     <span class="keyword">end</span>
 }
 
 <span class="comment">-- getting our dummy buffer
 </span>
-<span class="keyword">local</span> <span class="keyword">function</span> get_buffer()
-    <span class="keyword">local</span> fd, data = helpers.allocate_shm(size)
-    <span class="keyword">local</span> mypool = shm:create_pool(fd, size)
-    <span class="keyword">local</span> mybuffer = mypool:create_buffer(<span class="number">0</span>, width, height, stride, <span class="number">0</span>)
-    <span class="keyword">local</span> cairo_surface = cairo.ImageSurface.create_for_data(data,
+<span class="keyword">local</span> <span class="keyword">function</span> <span class="function-name">get_buffer</span>()
+    <span class="keyword">local</span> fd, data = helpers.<span class="function-name">allocate_shm</span>(size)
+    <span class="keyword">local</span> mypool = shm:<span class="function-name">create_pool</span>(fd, size)
+    <span class="keyword">local</span> mybuffer = mypool:<span class="function-name">create_buffer</span>(<span class="number">0</span>, width, height, stride, <span class="number">0</span>)
+    <span class="keyword">local</span> cairo_surface = cairo.ImageSurface.<span class="function-name">create_for_data</span>(data,
         cairo.Format.ARGB32, width, height, <span class="number">4</span> * width)
-    <span class="keyword">local</span> cr = cairo.Context(cairo_surface)
-    cr:set_source_rgba(<span class="number">1</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0.6</span>)
-    cr:paint()
+    <span class="keyword">local</span> cr = cairo.<span class="function-name">Context</span>(cairo_surface)
+    cr:<span class="function-name">set_source_rgba</span>(<span class="number">1</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0.6</span>)
+    cr:<span class="function-name">paint</span>()
     <span class="keyword">return</span> mybuffer
 <span class="keyword">end</span>
 
 <span class="comment">-- setting up the window
 </span>
-xdg:add_listener { [<span class="string">"ping"</span>] = wau.xdg_wm_base.pong }
+xdg:<span class="function-name">add_listener</span> { [<span class="string">"ping"</span>] = wau.xdg_wm_base.pong }
 
-<span class="keyword">local</span> surface = comp:create_surface()
-<span class="keyword">local</span> xdg_surface = xdg:get_xdg_surface(surface)
+<span class="keyword">local</span> surface = comp:<span class="function-name">create_surface</span>()
+<span class="keyword">local</span> xdg_surface = xdg:<span class="function-name">get_xdg_surface</span>(surface)
 
-xdg_surface:add_listener {
+xdg_surface:<span class="function-name">add_listener</span> {
     [<span class="string">"configure"</span>] = <span class="keyword">function</span>(_, s)
-        xdg_surface:ack_configure(s)
-        <span class="keyword">local</span> mybuffer = get_buffer()
-        surface:attach(mybuffer, <span class="number">0</span>, <span class="number">0</span>)
-        surface:commit()
+        xdg_surface:<span class="function-name">ack_configure</span>(s)
+        <span class="keyword">local</span> mybuffer = <span class="function-name">get_buffer</span>()
+        surface:<span class="function-name">attach</span>(mybuffer, <span class="number">0</span>, <span class="number">0</span>)
+        surface:<span class="function-name">commit</span>()
     <span class="keyword">end</span>
 }
 
-<span class="keyword">local</span> xdg_toplevel = xdg_surface:get_toplevel()
-xdg_toplevel:set_title(<span class="string">"🐶 wau"</span>)
-            :set_app_id(<span class="string">"superwichtig"</span>)
+<span class="keyword">local</span> xdg_toplevel = xdg_surface:<span class="function-name">get_toplevel</span>()
+xdg_toplevel:<span class="function-name">set_title</span>(<span class="string">"🐶 wau"</span>)
+            :<span class="function-name">set_app_id</span>(<span class="string">"superwichtig"</span>)
 
-surface:commit()
+surface:<span class="function-name">commit</span>()
 
 <span class="comment">-- a more sane example of an actual mainloop, no <code>while true</code>
 </span>
-GLib.timeout_add(GLib.PRIORITY_DEFAULT, <span class="number">20</span>, <span class="keyword">function</span>()
-    display:roundtrip()
+GLib.<span class="function-name">timeout_add</span>(GLib.PRIORITY_DEFAULT, <span class="number">20</span>, <span class="keyword">function</span>()
+    display:<span class="function-name">roundtrip</span>()
     <span class="keyword">return</span> <span class="keyword">true</span>
 <span class="keyword">end</span>)
 
 
-<span class="keyword">local</span> mainloop = GLib.MainLoop(<span class="keyword">nil</span>, <span class="keyword">nil</span>)
-mainloop:run()</pre>
+<span class="keyword">local</span> mainloop = GLib.<span class="function-name">MainLoop</span>(<span class="keyword">nil</span>, <span class="keyword">nil</span>)
+mainloop:<span class="function-name">run</span>()</pre>
 
 
 </div> <!-- id="content" -->
 </div> <!-- id="main" -->
 <div id="about">
-<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
-<i style="float:right;">Last updated 2022-11-18 22:14:59 </i>
+<i>generated by <a href="http://github.com/lunarmodules/LDoc">LDoc 1.5.0</a></i>
+<i style="float:right;">Last updated 2023-05-22 19:13:31 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>

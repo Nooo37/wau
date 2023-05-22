@@ -26,6 +26,7 @@
 <br/>
 <h1>wau</h1>
 
+
 <ul>
   <li><a href="../index.html">Index</a></li>
 </ul>
@@ -82,15 +83,15 @@
 #include &lt;wayland-client.h&gt;
 
 <span class="keyword">static</span> <span class="keyword">void</span>
-registry_handle_global(<span class="keyword">void</span> *data, <span class="keyword">struct</span> wl_registry *registry,
+<span class="function-name">registry_handle_global</span>(<span class="keyword">void</span> *data, <span class="keyword">struct</span> wl_registry *registry,
         uint32_t name, <span class="keyword">const</span> <span class="keyword">char</span> *interface, uint32_t version)
 {
-    printf(<span class="string">"interface: '%s', version: %d, name: %d\n"</span>,
+    <span class="function-name">printf</span>(<span class="string">"interface: '%s', version: %d, name: %d\n"</span>,
             interface, version, name);
 }
 
 <span class="keyword">static</span> <span class="keyword">void</span>
-registry_handle_global_remove(<span class="keyword">void</span> *data, <span class="keyword">struct</span> wl_registry *registry,
+<span class="function-name">registry_handle_global_remove</span>(<span class="keyword">void</span> *data, <span class="keyword">struct</span> wl_registry *registry,
         uint32_t name)
 {
     <span class="comment">// This space deliberately left blank
@@ -103,12 +104,12 @@ registry_listener = {
 };
 
 <span class="keyword">int</span>
-main(<span class="keyword">int</span> argc, <span class="keyword">char</span> *argv[])
+<span class="function-name">main</span>(<span class="keyword">int</span> argc, <span class="keyword">char</span> *argv[])
 {
-    <span class="keyword">struct</span> wl_display *display = wl_display_connect(NULL);
-    <span class="keyword">struct</span> wl_registry *registry = wl_display_get_registry(display);
-    wl_registry_add_listener(registry, &amp;registry_listener, NULL);
-    wl_display_roundtrip(display);
+    <span class="keyword">struct</span> wl_display *display = <span class="function-name">wl_display_connect</span>(NULL);
+    <span class="keyword">struct</span> wl_registry *registry = <span class="function-name">wl_display_get_registry</span>(display);
+    <span class="function-name">wl_registry_add_listener</span>(registry, &amp;registry_listener, NULL);
+    <span class="function-name">wl_display_roundtrip</span>(display);
     <span class="keyword">return</span> <span class="number">0</span>;
 }
 </pre>
@@ -124,11 +125,11 @@ main(<span class="keyword">int</span> argc, <span class="keyword">char</span> *a
 <pre>
 <span class="keyword">local</span> wau = <span class="global">require</span>(<span class="string">"wau"</span>)
 
-<span class="keyword">local</span> <span class="keyword">function</span> registry_handle_global(registry, name, interface, version)
+<span class="keyword">local</span> <span class="keyword">function</span> <span class="function-name">registry_handle_global</span>(registry, name, interface, version)
     <span class="global">print</span>(<span class="string">"interface: "</span> .. interface .. <span class="string">", version: "</span> .. <span class="global">tostring</span>(version) .. <span class="string">", name: "</span> .. name)
 <span class="keyword">end</span>
 
-<span class="keyword">local</span> <span class="keyword">function</span> registry_handle_global_remove(registry, name)
+<span class="keyword">local</span> <span class="keyword">function</span> <span class="function-name">registry_handle_global_remove</span>(registry, name)
     <span class="comment">-- This space deliberately left blank
 </span><span class="keyword">end</span>
 
@@ -137,15 +138,15 @@ main(<span class="keyword">int</span> argc, <span class="keyword">char</span> *a
     [<span class="string">"global_remove"</span>] = registry_handle_global_remove
 }
 
-<span class="keyword">local</span> <span class="keyword">function</span> main()
-    <span class="keyword">local</span> display = wau.wl_display.connect(<span class="keyword">nil</span>)
-    <span class="keyword">local</span> registry = wau.wl_display.get_registry(display)
-    wau.wl_registry.add_listener(registry, registry_listener, <span class="keyword">nil</span>)
-    wau.wl_display.roundtrip(display)
+<span class="keyword">local</span> <span class="keyword">function</span> <span class="function-name">main</span>()
+    <span class="keyword">local</span> display = wau.wl_display.<span class="function-name">connect</span>(<span class="keyword">nil</span>)
+    <span class="keyword">local</span> registry = wau.wl_display.<span class="function-name">get_registry</span>(display)
+    wau.wl_registry.<span class="function-name">add_listener</span>(registry, registry_listener, <span class="keyword">nil</span>)
+    wau.wl_display.<span class="function-name">roundtrip</span>(display)
     <span class="keyword">return</span> <span class="number">0</span>
 <span class="keyword">end</span>
 
-main()
+<span class="function-name">main</span>()
 </pre>
 
 
@@ -169,13 +170,13 @@ main()
 
 
 <pre>
-    <span class="keyword">local</span> display = wau.wl_display.connect(<span class="keyword">nil</span>)
--   <span class="keyword">local</span> registry = wau.wl_display.get_registry(display)
-+   <span class="keyword">local</span> registry = display:get_registry()
--   wau.wl_registry.add_listener(registry, registry_listener, <span class="keyword">nil</span>)
-+   registry:add_listener(registry_listener)
--   wau.wl_display.roundtrip(display)
-+   display:roundtrip()
+    <span class="keyword">local</span> display = wau.wl_display.<span class="function-name">connect</span>(<span class="keyword">nil</span>)
+-   <span class="keyword">local</span> registry = wau.wl_display.<span class="function-name">get_registry</span>(display)
++   <span class="keyword">local</span> registry = display:<span class="function-name">get_registry</span>()
+-   wau.wl_registry.<span class="function-name">add_listener</span>(registry, registry_listener, <span class="keyword">nil</span>)
++   registry:<span class="function-name">add_listener</span>(registry_listener)
+-   wau.wl_display.<span class="function-name">roundtrip</span>(display)
++   display:<span class="function-name">roundtrip</span>()
 </pre>
 
 
@@ -188,8 +189,8 @@ main()
 
 
 <pre>
--   registry:add_listener(registry_listener)
-+   registry:add_listener {
+-   registry:<span class="function-name">add_listener</span>(registry_listener)
++   registry:<span class="function-name">add_listener</span> {
 +       [<span class="string">"global"</span>] = registry_handle_global,
 +       [<span class="string">"global_remove"</span>] = registry_handle_global_remove
 +   }
@@ -200,7 +201,7 @@ main()
 
 
 <pre>
-    registry:add_listener {
+    registry:<span class="function-name">add_listener</span> {
 -       [<span class="string">"global"</span>] = registry_handle_global,
 +       [<span class="string">"global"</span>] = <span class="keyword">function</span>(registry, name, interface, version)
 +           <span class="global">print</span>(<span class="string">"interface: "</span> .. interface .. <span class="string">", version: "</span> .. <span class="global">tostring</span>(version) .. <span class="string">", name: "</span> .. name)
@@ -219,10 +220,10 @@ main()
 <pre>
 <span class="keyword">local</span> wau = <span class="global">require</span>(<span class="string">"wau"</span>)
 
-<span class="keyword">local</span> display = wau.wl_display.connect(<span class="keyword">nil</span>)
-<span class="keyword">local</span> registry = display:get_registry()
+<span class="keyword">local</span> display = wau.wl_display.<span class="function-name">connect</span>(<span class="keyword">nil</span>)
+<span class="keyword">local</span> registry = display:<span class="function-name">get_registry</span>()
 
-registry:add_listener {
+registry:<span class="function-name">add_listener</span> {
     [<span class="string">"global"</span>] = <span class="keyword">function</span>(registry, name, interface, version)
         <span class="global">print</span>(<span class="string">"interface: "</span> .. interface .. <span class="string">", version: "</span> .. <span class="global">tostring</span>(version) .. <span class="string">", name: "</span> .. name)
     <span class="keyword">end</span>,
@@ -231,7 +232,7 @@ registry:add_listener {
 </span>    <span class="keyword">end</span>
 }
 
-display:roundtrip()
+display:<span class="function-name">roundtrip</span>()
 </pre>
 
 
@@ -240,8 +241,8 @@ display:roundtrip()
 </div> <!-- id="content" -->
 </div> <!-- id="main" -->
 <div id="about">
-<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
-<i style="float:right;">Last updated 2022-11-18 22:14:59 </i>
+<i>generated by <a href="http://github.com/lunarmodules/LDoc">LDoc 1.5.0</a></i>
+<i style="float:right;">Last updated 2023-05-22 19:13:31 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>
