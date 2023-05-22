@@ -240,6 +240,8 @@ wau.wl_registry:init {
 --
 -- Clients can handle the 'done' event to get notified when
 -- the related request is done.
+-- Note, because wl_callback objects are created from multiple independent
+-- factory interfaces, the wl_callback interface is frozen at version 1.
 -- @type wl_callback
 wau.wl_callback:init {
     name = "wl_callback",
@@ -273,7 +275,7 @@ wau.wl_callback:init {
 -- @type wl_compositor
 wau.wl_compositor:init {
     name = "wl_compositor",
-    version = 4,
+    version = 6,
     methods = {
         --- create new surface
         --
@@ -363,6 +365,11 @@ wau.wl_shm_pool:init {
         -- for the pool from the file descriptor passed when the pool was
         -- created, but using the new size.  This request can only be
         -- used to make the pool bigger.
+        -- This request only changes the amount of bytes that are mmapped
+        -- by the server and does not touch the file corresponding to the
+        -- file descriptor passed at creation time. It is the client's
+        -- responsibility to ensure that the file is at least as big as
+        -- the new pool size.
         -- @function wl_shm_pool:resize
         -- @tparam int size new size of the pool, in bytes
         -- @treturn wl_shm_pool self
@@ -389,8 +396,8 @@ wau.wl_shm_pool:init {
 -- memory.
 -- Clients can create wl_shm_pool objects using the create_pool
 -- request.
--- At connection setup time, the wl_shm object emits one or more
--- format events to inform clients about the valid pixel formats
+-- On binding the wl_shm object one or more format events
+-- are emitted to inform clients about the valid pixel formats
 -- that can be used for buffers.
 -- @type wl_shm
 wau.wl_shm:init {
@@ -449,6 +456,8 @@ wau.wl_shm:init {
         -- The drm format codes match the macros defined in drm_fourcc.h, except
         -- argb8888 and xrgb8888. The formats actually supported by the compositor
         -- will be reported by the format event.
+        -- For all wl_shm formats and unless specified in another protocol
+        -- extension, pre-multiplied alpha is used for pixel values.
         -- @enum wl_shm.Format
         -- @param ARGB8888 0 32-bit ARGB format, [31:0] A:R:G:B 8:8:8:8 little endian
         -- @param XRGB8888 1 32-bit RGB format, [31:0] x:R:G:B 8:8:8:8 little endian
@@ -554,6 +563,25 @@ wau.wl_shm:init {
         -- @param NV15 0x3531564e 2x2 subsampled Cr:Cb plane
         -- @param Q410 0x30313451
         -- @param Q401 0x31303451
+        -- @param XRGB16161616 0x38345258 [63:0] x:R:G:B 16:16:16:16 little endian
+        -- @param XBGR16161616 0x38344258 [63:0] x:B:G:R 16:16:16:16 little endian
+        -- @param ARGB16161616 0x38345241 [63:0] A:R:G:B 16:16:16:16 little endian
+        -- @param ABGR16161616 0x38344241 [63:0] A:B:G:R 16:16:16:16 little endian
+        -- @param C1 0x20203143 [7:0] C0:C1:C2:C3:C4:C5:C6:C7 1:1:1:1:1:1:1:1 eight pixels/byte
+        -- @param C2 0x20203243 [7:0] C0:C1:C2:C3 2:2:2:2 four pixels/byte
+        -- @param C4 0x20203443 [7:0] C0:C1 4:4 two pixels/byte
+        -- @param D1 0x20203144 [7:0] D0:D1:D2:D3:D4:D5:D6:D7 1:1:1:1:1:1:1:1 eight pixels/byte
+        -- @param D2 0x20203244 [7:0] D0:D1:D2:D3 2:2:2:2 four pixels/byte
+        -- @param D4 0x20203444 [7:0] D0:D1 4:4 two pixels/byte
+        -- @param D8 0x20203844 [7:0] D
+        -- @param R1 0x20203152 [7:0] R0:R1:R2:R3:R4:R5:R6:R7 1:1:1:1:1:1:1:1 eight pixels/byte
+        -- @param R2 0x20203252 [7:0] R0:R1:R2:R3 2:2:2:2 four pixels/byte
+        -- @param R4 0x20203452 [7:0] R0:R1 4:4 two pixels/byte
+        -- @param R10 0x20303152 [15:0] x:R 6:10 little endian
+        -- @param R12 0x20323152 [15:0] x:R 4:12 little endian
+        -- @param AVUY8888 0x59555641 [31:0] A:Cr:Cb:Y 8:8:8:8 little endian
+        -- @param XVUY8888 0x59555658 [31:0] X:Cr:Cb:Y 8:8:8:8 little endian
+        -- @param P030 0x30333050 2x2 subsampled Cr:Cb plane 10 bits per channel packed
         ["format"] = {
             ["argb8888"] = 0,
             ["xrgb8888"] = 1,
@@ -659,6 +687,25 @@ wau.wl_shm:init {
             ["nv15"] = 0x3531564e,
             ["q410"] = 0x30313451,
             ["q401"] = 0x31303451,
+            ["xrgb16161616"] = 0x38345258,
+            ["xbgr16161616"] = 0x38344258,
+            ["argb16161616"] = 0x38345241,
+            ["abgr16161616"] = 0x38344241,
+            ["c1"] = 0x20203143,
+            ["c2"] = 0x20203243,
+            ["c4"] = 0x20203443,
+            ["d1"] = 0x20203144,
+            ["d2"] = 0x20203244,
+            ["d4"] = 0x20203444,
+            ["d8"] = 0x20203844,
+            ["r1"] = 0x20203152,
+            ["r2"] = 0x20203252,
+            ["r4"] = 0x20203452,
+            ["r10"] = 0x20303152,
+            ["r12"] = 0x20323152,
+            ["avuy8888"] = 0x59555641,
+            ["xvuy8888"] = 0x59555658,
+            ["p030"] = 0x30333050,
         },
     },
     methods_opcode = {
@@ -669,10 +716,16 @@ wau.wl_shm:init {
 --- content for a wl_surface
 --
 -- A buffer provides the content for a wl_surface. Buffers are
--- created through factory interfaces such as wl_drm, wl_shm or
--- similar. It has a width and a height and can be attached to a
--- wl_surface, but the mechanism by which a client provides and
--- updates the contents is defined by the buffer factory interface.
+-- created through factory interfaces such as wl_shm, wp_linux_buffer_params
+-- (from the linux-dmabuf protocol extension) or similar. It has a width and
+-- a height and can be attached to a wl_surface, but the mechanism by which a
+-- client provides and updates the contents is defined by the buffer factory
+-- interface.
+-- If the buffer uses a format that has an alpha channel, the alpha channel
+-- is assumed to be premultiplied in the color channels unless otherwise
+-- specified.
+-- Note, because wl_buffer objects are created from multiple independent
+-- factory interfaces, the wl_buffer interface is frozen at version 1.
 -- @type wl_buffer
 wau.wl_buffer:init {
     name = "wl_buffer",
@@ -863,8 +916,9 @@ wau.wl_data_offer:init {
         --- notify the source-side available actions
         --
         -- This event indicates the actions offered by the data source. It
-        -- will be sent right after wl_data_device.enter, or anytime the source
-        -- side changes its offered actions through wl_data_source.set_actions.
+        -- will be sent immediately after creating the wl_data_offer object,
+        -- or anytime the source side changes its offered actions through
+        -- wl_data_source.set_actions.
         -- @event wl_data_offer:source_actions
         -- @tparam uint source_actions actions offered by the data source
         {
@@ -1149,11 +1203,11 @@ wau.wl_data_device:init {
         -- wl_surface.commit as usual. The icon surface is given the role of
         -- a drag-and-drop icon. If the icon surface already has another role,
         -- it raises a protocol error.
-        -- The current and pending input regions of the icon wl_surface are
-        -- cleared, and wl_surface.set_input_region is ignored until the
-        -- wl_surface is no longer used as the icon surface. When the use
-        -- as an icon ends, the current and pending input regions become
-        -- undefined, and the wl_surface is unmapped.
+        -- The input region is ignored for wl_surfaces with the role of a
+        -- drag-and-drop icon.
+        -- The given source may not be used in any further set_selection or
+        -- start_drag requests. Attempting to reuse a previously-used source
+        -- may send a used_source error.
         -- @function wl_data_device:start_drag
         -- @tparam wl_data_source source data source for the eventual transfer
         -- @tparam wl_surface origin surface where the drag originates
@@ -1170,6 +1224,9 @@ wau.wl_data_device:init {
         -- This request asks the compositor to set the selection
         -- to the data from the source on behalf of the client.
         -- To unset the selection, set the source to NULL.
+        -- The given source may not be used in any further set_selection or
+        -- start_drag requests. Attempting to reuse a previously-used source
+        -- may send a used_source error.
         -- @function wl_data_device:set_selection
         -- @tparam wl_data_source source data source for the selection
         -- @tparam uint serial serial number of the event that triggered this request
@@ -1198,7 +1255,7 @@ wau.wl_data_device:init {
         -- which will subsequently be used in either the
         -- data_device.enter event (for drag-and-drop) or the
         -- data_device.selection event (for selections).  Immediately
-        -- following the data_device_data_offer event, the new data_offer
+        -- following the data_device.data_offer event, the new data_offer
         -- object will send out data_offer.offer events to describe the
         -- mime types it offers.
         -- @event wl_data_device:data_offer
@@ -1280,9 +1337,10 @@ wau.wl_data_device:init {
         -- immediately before receiving keyboard focus and when a new
         -- selection is set while the client has keyboard focus.  The
         -- data_offer is valid until a new data_offer or NULL is received
-        -- or until the client loses keyboard focus.  The client must
-        -- destroy the previous selection data_offer, if any, upon receiving
-        -- this event.
+        -- or until the client loses keyboard focus.  Switching surface with
+        -- keyboard focus within the same client doesn't mean a new selection
+        -- will be sent.  The client must destroy the previous selection
+        -- data_offer, if any, upon receiving this event.
         -- @event wl_data_device:selection
         -- @tparam wl_data_offer id selection data_offer object
         {
@@ -1295,8 +1353,10 @@ wau.wl_data_device:init {
         --- error
         -- @enum wl_data_device.Error
         -- @param ROLE 0 given wl_surface has another role
+        -- @param USED_SOURCE 1 source has already been used
         ["error"] = {
             ["role"] = 0,
+            ["used_source"] = 1,
         },
     },
     methods_opcode = {
@@ -1393,7 +1453,8 @@ wau.wl_data_device_manager:init {
 -- It allows clients to associate a wl_shell_surface with
 -- a basic surface.
 -- Note! This protocol is deprecated and not intended for production use.
--- For desktop-style user interfaces, use xdg_shell.
+-- For desktop-style user interfaces, use xdg_shell. Compositors and clients
+-- should not implement this interface.
 -- @type wl_shell
 wau.wl_shell:init {
     name = "wl_shell",
@@ -1785,8 +1846,9 @@ wau.wl_shell_surface:init {
 -- that this request gives a role to a wl_surface. Often, this
 -- request also creates a new protocol object that represents the
 -- role and adds additional functionality to wl_surface. When a
--- client wants to destroy a wl_surface, they must destroy this 'role
--- object' before the wl_surface.
+-- client wants to destroy a wl_surface, they must destroy this role
+-- object before the wl_surface, otherwise a defunct_role_object error is
+-- sent.
 -- Destroying the role object does not remove the role from the
 -- wl_surface, but it may stop the wl_surface from "playing the role".
 -- For instance, if a wl_subsurface object is destroyed, the wl_surface
@@ -1798,7 +1860,7 @@ wau.wl_shell_surface:init {
 -- @type wl_surface
 wau.wl_surface:init {
     name = "wl_surface",
-    version = 4,
+    version = 6,
     methods = {
         --- delete surface
         --
@@ -1823,7 +1885,14 @@ wau.wl_surface:init {
         -- buffer's upper left corner, relative to the current buffer's upper
         -- left corner, in surface-local coordinates. In other words, the
         -- x and y, combined with the new surface size define in which
-        -- directions the surface's size changes.
+        -- directions the surface's size changes. Setting anything other than 0
+        -- as x and y arguments is discouraged, and should instead be replaced
+        -- with using the separate wl_surface.offset request.
+        -- When the bound wl_surface version is 5 or higher, passing any
+        -- non-zero x or y is a protocol violation, and will result in an
+        -- 'invalid_offset' error being raised. The x and y arguments are ignored
+        -- and do not change the pending state. To achieve equivalent semantics,
+        -- use wl_surface.offset.
         -- Surface contents are double-buffered state, see wl_surface.commit.
         -- The initial surface contents are void; there is no content.
         -- wl_surface.attach assigns the given wl_buffer as the pending
@@ -1846,9 +1915,12 @@ wau.wl_surface:init {
         -- case. Alternatively, a client could create multiple wl_buffer objects
         -- from the same backing storage or use wp_linux_buffer_release.
         -- Destroying the wl_buffer after wl_buffer.release does not change
-        -- the surface contents. However, if the client destroys the
-        -- wl_buffer before receiving the wl_buffer.release event, the surface
-        -- contents become undefined immediately.
+        -- the surface contents. Destroying the wl_buffer before wl_buffer.release
+        -- is allowed as long as the underlying buffer storage isn't re-used (this
+        -- can happen e.g. on client process termination). However, if the client
+        -- destroys the wl_buffer before receiving the wl_buffer.release event and
+        -- mutates the underlying buffer storage, the surface contents become
+        -- undefined immediately.
         -- If wl_surface.attach is sent with a NULL wl_buffer, the
         -- following wl_surface.commit will remove the surface content.
         -- @function wl_surface:attach
@@ -2102,6 +2174,27 @@ wau.wl_surface:init {
             signature = "4iiii",
             types = { 0, 0, 0, 0, },
         },
+        --- set the surface contents offset
+        --
+        -- The x and y arguments specify the location of the new pending
+        -- buffer's upper left corner, relative to the current buffer's upper
+        -- left corner, in surface-local coordinates. In other words, the
+        -- x and y, combined with the new surface size define in which
+        -- directions the surface's size changes.
+        -- Surface location offset is double-buffered state, see
+        -- wl_surface.commit.
+        -- This request is semantically equivalent to and the replaces the x and y
+        -- arguments in the wl_surface.attach request in wl_surface versions prior
+        -- to 5. See wl_surface.attach for details.
+        -- @function wl_surface:offset
+        -- @tparam int x surface-local x coordinate
+        -- @tparam int y surface-local y coordinate
+        -- @treturn wl_surface self
+        {
+            name = "offset",
+            signature = "5ii",
+            types = { 0, 0, },
+        },
     },
     events = {
         --- surface enters an output
@@ -2134,6 +2227,35 @@ wau.wl_surface:init {
             signature = "o",
             types = { wau.wl_output, },
         },
+        --- preferred buffer scale for the surface
+        --
+        -- This event indicates the preferred buffer scale for this surface. It is
+        -- sent whenever the compositor's preference changes.
+        -- It is intended that scaling aware clients use this event to scale their
+        -- content and use wl_surface.set_buffer_scale to indicate the scale they
+        -- have rendered with. This allows clients to supply a higher detail
+        -- buffer.
+        -- @event wl_surface:preferred_buffer_scale
+        -- @tparam int factor preferred scaling factor
+        {
+            name = "preferred_buffer_scale",
+            signature = "6i",
+            types = { 0, },
+        },
+        --- preferred buffer transform for the surface
+        --
+        -- This event indicates the preferred buffer transform for this surface.
+        -- It is sent whenever the compositor's preference changes.
+        -- It is intended that transform aware clients use this event to apply the
+        -- transform to their content and use wl_surface.set_buffer_transform to
+        -- indicate the transform they have rendered with.
+        -- @event wl_surface:preferred_buffer_transform
+        -- @tparam uint transform preferred transform
+        {
+            name = "preferred_buffer_transform",
+            signature = "6u",
+            types = { 0, },
+        },
     },
     enums = {
         --- wl_surface error values
@@ -2143,10 +2265,14 @@ wau.wl_surface:init {
         -- @param INVALID_SCALE 0 buffer scale value is invalid
         -- @param INVALID_TRANSFORM 1 buffer transform value is invalid
         -- @param INVALID_SIZE 2 buffer size is invalid
+        -- @param INVALID_OFFSET 3 buffer offset is invalid
+        -- @param DEFUNCT_ROLE_OBJECT 4 surface was destroyed before its role object
         ["error"] = {
             ["invalid_scale"] = 0,
             ["invalid_transform"] = 1,
             ["invalid_size"] = 2,
+            ["invalid_offset"] = 3,
+            ["defunct_role_object"] = 4,
         },
     },
     methods_opcode = {
@@ -2160,6 +2286,7 @@ wau.wl_surface:init {
         ["set_buffer_transform"] = 7,
         ["set_buffer_scale"] = 8,
         ["damage_buffer"] = 9,
+        ["offset"] = 10,
     },
 }
 
@@ -2172,7 +2299,7 @@ wau.wl_surface:init {
 -- @type wl_seat
 wau.wl_seat:init {
     name = "wl_seat",
-    version = 7,
+    version = 9,
     methods = {
         --- return pointer object
         --
@@ -2267,9 +2394,18 @@ wau.wl_seat:init {
         },
         --- unique identifier for this seat
         --
-        -- In a multiseat configuration this can be used by the client to help
-        -- identify which physical devices the seat represents. Based on
-        -- the seat configuration used by the compositor.
+        -- In a multi-seat configuration the seat name can be used by clients to
+        -- help identify which physical devices the seat represents.
+        -- The seat name is a UTF-8 string with no convention defined for its
+        -- contents. Each name is unique among all wl_seat globals. The name is
+        -- only guaranteed to be unique for the current compositor instance.
+        -- The same seat names are used for all clients. Thus, the name can be
+        -- shared across processes to refer to a specific wl_seat global.
+        -- The name event is sent after binding to the seat global. This event is
+        -- only sent once per seat object, and the name does not change over the
+        -- lifetime of the wl_seat global.
+        -- Compositors may re-use the same seat name if the wl_seat global is
+        -- destroyed and re-created later.
         -- @event wl_seat:name
         -- @tparam string name seat identifier
         {
@@ -2321,7 +2457,7 @@ wau.wl_seat:init {
 -- @type wl_pointer
 wau.wl_pointer:init {
     name = "wl_pointer",
-    version = 7,
+    version = 9,
     methods = {
         --- set the pointer surface
         --
@@ -2346,11 +2482,12 @@ wau.wl_pointer:init {
         -- The hotspot can also be updated by passing the currently set
         -- pointer surface to this request with new values for hotspot_x
         -- and hotspot_y.
-        -- The current and pending input regions of the wl_surface are
-        -- cleared, and wl_surface.set_input_region is ignored until the
-        -- wl_surface is no longer used as the cursor. When the use as a
-        -- cursor ends, the current and pending input regions become
-        -- undefined, and the wl_surface is unmapped.
+        -- The input region is ignored for wl_surfaces with the role of
+        -- a cursor. When the use as a cursor ends, the wl_surface is
+        -- unmapped.
+        -- The serial parameter must match the latest wl_pointer.enter
+        -- serial number sent to the client. Otherwise the request will be
+        -- ignored.
         -- @function wl_pointer:set_cursor
         -- @tparam uint serial serial number of the enter event
         -- @tparam wl_surface surface pointer surface
@@ -2562,6 +2699,8 @@ wau.wl_pointer:init {
         -- Discrete step information for scroll and other axes.
         -- This event carries the axis value of the wl_pointer.axis event in
         -- discrete steps (e.g. mouse wheel clicks).
+        -- This event is deprecated with wl_pointer version 8 - this event is not
+        -- sent to clients supporting version 8 or later.
         -- This event does not occur on its own, it is coupled with a
         -- wl_pointer.axis event that represents this axis value on a
         -- continuous scale. The protocol guarantees that each axis_discrete
@@ -2569,7 +2708,8 @@ wau.wl_pointer:init {
         -- axis number within the same wl_pointer.frame. Note that the protocol
         -- allows for other events to occur between the axis_discrete and
         -- its coupled axis event, including other axis_discrete or axis
-        -- events.
+        -- events. A wl_pointer.frame must not contain more than one axis_discrete
+        -- event per axis type.
         -- This event is optional; continuous scrolling devices
         -- like two-finger scrolling on touchpads do not have discrete
         -- steps and do not generate this event.
@@ -2585,6 +2725,72 @@ wau.wl_pointer:init {
         {
             name = "axis_discrete",
             signature = "5ui",
+            types = { 0, 0, },
+        },
+        --- axis high-resolution scroll event
+        --
+        -- Discrete high-resolution scroll information.
+        -- This event carries high-resolution wheel scroll information,
+        -- with each multiple of 120 representing one logical scroll step
+        -- (a wheel detent). For example, an axis_value120 of 30 is one quarter of
+        -- a logical scroll step in the positive direction, a value120 of
+        -- -240 are two logical scroll steps in the negative direction within the
+        -- same hardware event.
+        -- Clients that rely on discrete scrolling should accumulate the
+        -- value120 to multiples of 120 before processing the event.
+        -- The value120 must not be zero.
+        -- This event replaces the wl_pointer.axis_discrete event in clients
+        -- supporting wl_pointer version 8 or later.
+        -- Where a wl_pointer.axis_source event occurs in the same
+        -- wl_pointer.frame, the axis source applies to this event.
+        -- The order of wl_pointer.axis_value120 and wl_pointer.axis_source is
+        -- not guaranteed.
+        -- @event wl_pointer:axis_value120
+        -- @tparam uint axis axis type
+        -- @tparam int value120 scroll distance as fraction of 120
+        {
+            name = "axis_value120",
+            signature = "8ui",
+            types = { 0, 0, },
+        },
+        --- axis relative physical direction event
+        --
+        -- Relative directional information of the entity causing the axis
+        -- motion.
+        -- For a wl_pointer.axis event, the wl_pointer.axis_relative_direction
+        -- event specifies the movement direction of the entity causing the
+        -- wl_pointer.axis event. For example:
+        -- - if a user's fingers on a touchpad move down and this
+        -- causes a wl_pointer.axis vertical_scroll down event, the physical
+        -- direction is 'identical'
+        -- - if a user's fingers on a touchpad move down and this causes a
+        -- wl_pointer.axis vertical_scroll up scroll up event ('natural
+        -- scrolling'), the physical direction is 'inverted'.
+        -- A client may use this information to adjust scroll motion of
+        -- components. Specifically, enabling natural scrolling causes the
+        -- content to change direction compared to traditional scrolling.
+        -- Some widgets like volume control sliders should usually match the
+        -- physical direction regardless of whether natural scrolling is
+        -- active. This event enables clients to match the scroll direction of
+        -- a widget to the physical direction.
+        -- This event does not occur on its own, it is coupled with a
+        -- wl_pointer.axis event that represents this axis value.
+        -- The protocol guarantees that each axis_relative_direction event is
+        -- always followed by exactly one axis event with the same
+        -- axis number within the same wl_pointer.frame. Note that the protocol
+        -- allows for other events to occur between the axis_relative_direction
+        -- and its coupled axis event.
+        -- The axis number is identical to the axis number in the associated
+        -- axis event.
+        -- The order of wl_pointer.axis_relative_direction,
+        -- wl_pointer.axis_discrete and wl_pointer.axis_source is not
+        -- guaranteed.
+        -- @event wl_pointer:axis_relative_direction
+        -- @tparam uint axis axis type
+        -- @tparam uint direction physical direction relative to axis motion
+        {
+            name = "axis_relative_direction",
+            signature = "9uu",
             types = { 0, 0, },
         },
     },
@@ -2643,6 +2849,17 @@ wau.wl_pointer:init {
             ["continuous"] = 2,
             ["wheel_tilt"] = 3,
         },
+        --- axis relative direction
+        --
+        -- This specifies the direction of the physical motion that caused a
+        -- wl_pointer.axis event, relative to the wl_pointer.axis direction.
+        -- @enum wl_pointer.AxisRelativeDirection
+        -- @param IDENTICAL 0 physical motion matches axis direction
+        -- @param INVERTED 1 physical motion is the inverse of the axis direction
+        ["axis_relative_direction"] = {
+            ["identical"] = 0,
+            ["inverted"] = 1,
+        },
     },
     methods_opcode = {
         ["set_cursor"] = 0,
@@ -2657,7 +2874,7 @@ wau.wl_pointer:init {
 -- @type wl_keyboard
 wau.wl_keyboard:init {
     name = "wl_keyboard",
-    version = 7,
+    version = 9,
     methods = {
         --- release the keyboard object
         -- @function wl_keyboard:release
@@ -2673,7 +2890,8 @@ wau.wl_keyboard:init {
         --- keyboard mapping
         --
         -- This event provides a file descriptor to the client which can be
-        -- memory-mapped to provide a keyboard mapping description.
+        -- memory-mapped in read-only mode to provide a keyboard mapping
+        -- description.
         -- From version 7 onwards, the fd must be mapped with MAP_PRIVATE by
         -- the recipient, as MAP_SHARED may fail.
         -- @event wl_keyboard:keymap
@@ -2706,8 +2924,10 @@ wau.wl_keyboard:init {
         -- a certain surface.
         -- The leave notification is sent before the enter notification
         -- for the new focus.
-        -- After this event client must assume that all keys, including modifiers,
-        -- are lifted and also it must stop key repeating if there's some going on.
+        -- After this event client must assume that no keys are pressed,
+        -- it must stop key repeating if there's some going on and until
+        -- it receives the next wl_keyboard.modifiers event, the client
+        -- must also assume no modifiers are active.
         -- @event wl_keyboard:leave
         -- @tparam uint serial serial number of the leave event
         -- @tparam wl_surface surface surface that lost keyboard focus
@@ -2725,6 +2945,8 @@ wau.wl_keyboard:init {
         -- by feeding it to the keyboard mapping (see the keymap event).
         -- If this event produces a change in modifiers, then the resulting
         -- wl_keyboard.modifiers event must be sent after this event.
+        -- The compositor must not send this event without a surface of the client
+        -- having keyboard focus.
         -- @event wl_keyboard:key
         -- @tparam uint serial serial number of the key event
         -- @tparam uint time timestamp with millisecond granularity
@@ -2739,6 +2961,13 @@ wau.wl_keyboard:init {
         --
         -- Notifies clients that the modifier and/or group state has
         -- changed, and it should update its local state.
+        -- The compositor may send this event without a surface of the client
+        -- having keyboard focus, for example to tie modifier information to
+        -- pointer focus instead. If a modifier event with pressed modifiers is sent
+        -- without a prior enter event, the client can assume the modifier state is
+        -- valid until it receives the next wl_keyboard.modifiers event. In order to
+        -- reset the modifier state again, the compositor can send a
+        -- wl_keyboard.modifiers event with no pressed modifiers.
         -- @event wl_keyboard:modifiers
         -- @tparam uint serial serial number of the modifiers event
         -- @tparam uint mods_depressed depressed modifiers
@@ -2777,7 +3006,7 @@ wau.wl_keyboard:init {
         -- client with the wl_keyboard.keymap event.
         -- @enum wl_keyboard.KeymapFormat
         -- @param NO_KEYMAP 0 no keymap; client must understand how to interpret the raw keycode
-        -- @param XKB_V1 1 libxkbcommon compatible; to determine the xkb keycode, clients must add 8 to the key event keycode
+        -- @param XKB_V1 1 libxkbcommon compatible, null-terminated string; to determine the xkb keycode, clients must add 8 to the key event keycode
         ["keymap_format"] = {
             ["no_keymap"] = 0,
             ["xkb_v1"] = 1,
@@ -2810,7 +3039,7 @@ wau.wl_keyboard:init {
 -- @type wl_touch
 wau.wl_touch:init {
     name = "wl_touch",
-    version = 7,
+    version = 9,
     methods = {
         --- release the touch object
         -- @function wl_touch:release
@@ -2977,7 +3206,7 @@ wau.wl_touch:init {
 -- @type wl_output
 wau.wl_output:init {
     name = "wl_output",
-    version = 3,
+    version = 4,
     methods = {
         --- release the output object
         --
@@ -3000,12 +3229,14 @@ wau.wl_output:init {
         -- any of the properties change.
         -- The physical size can be set to zero if it doesn't make sense for this
         -- output (e.g. for projectors or virtual outputs).
+        -- The geometry event will be followed by a done event (starting from
+        -- version 2).
         -- Note: wl_output only advertises partial information about the output
         -- position and identification. Some compositors, for instance those not
         -- implementing a desktop-style output layout or those exposing virtual
         -- outputs, might fake this information. Instead of using x and y, clients
         -- should use xdg_output.logical_position. Instead of using make and model,
-        -- clients should use xdg_output.name and xdg_output.description.
+        -- clients should use name and description.
         -- @event wl_output:geometry
         -- @tparam int x x position within the global compositor space
         -- @tparam int y y position within the global compositor space
@@ -3040,6 +3271,8 @@ wau.wl_output:init {
         -- space should use xdg_output.logical_size instead.
         -- The vertical refresh rate can be set to zero if it doesn't make
         -- sense for this output (e.g. for virtual outputs).
+        -- The mode event will be followed by a done event (starting from
+        -- version 2).
         -- Clients should not use the refresh rate to schedule frames. Instead,
         -- they should use the wl_surface.frame event or the presentation-time
         -- protocol.
@@ -3087,11 +3320,62 @@ wau.wl_output:init {
         -- the scale of the output. That way the compositor can
         -- avoid scaling the surface, and the client can supply
         -- a higher detail image.
+        -- The scale event will be followed by a done event.
         -- @event wl_output:scale
         -- @tparam int factor scaling factor of output
         {
             name = "scale",
             signature = "2i",
+            types = { 0, },
+        },
+        --- name of this output
+        --
+        -- Many compositors will assign user-friendly names to their outputs, show
+        -- them to the user, allow the user to refer to an output, etc. The client
+        -- may wish to know this name as well to offer the user similar behaviors.
+        -- The name is a UTF-8 string with no convention defined for its contents.
+        -- Each name is unique among all wl_output globals. The name is only
+        -- guaranteed to be unique for the compositor instance.
+        -- The same output name is used for all clients for a given wl_output
+        -- global. Thus, the name can be shared across processes to refer to a
+        -- specific wl_output global.
+        -- The name is not guaranteed to be persistent across sessions, thus cannot
+        -- be used to reliably identify an output in e.g. configuration files.
+        -- Examples of names include 'HDMI-A-1', 'WL-1', 'X11-1', etc. However, do
+        -- not assume that the name is a reflection of an underlying DRM connector,
+        -- X11 connection, etc.
+        -- The name event is sent after binding the output object. This event is
+        -- only sent once per output object, and the name does not change over the
+        -- lifetime of the wl_output global.
+        -- Compositors may re-use the same output name if the wl_output global is
+        -- destroyed and re-created later. Compositors should avoid re-using the
+        -- same name if possible.
+        -- The name event will be followed by a done event.
+        -- @event wl_output:name
+        -- @tparam string name output name
+        {
+            name = "name",
+            signature = "4s",
+            types = { 0, },
+        },
+        --- human-readable description of this output
+        --
+        -- Many compositors can produce human-readable descriptions of their
+        -- outputs. The client may wish to know this description as well, e.g. for
+        -- output selection purposes.
+        -- The description is a UTF-8 string with no convention defined for its
+        -- contents. The description is not guaranteed to be unique among all
+        -- wl_output globals. Examples might include 'Foocorp 11" Display' or
+        -- 'Virtual X11 output via :1'.
+        -- The description event is sent after binding the output object and
+        -- whenever the description changes. The description is optional, and may
+        -- not be sent at all.
+        -- The description event will be followed by a done event.
+        -- @event wl_output:description
+        -- @tparam string description output description
+        {
+            name = "description",
+            signature = "4s",
             types = { 0, },
         },
     },
@@ -3265,12 +3549,15 @@ wau.wl_subcompositor:init {
         -- associate it with the given parent surface. This turns a
         -- plain wl_surface into a sub-surface.
         -- The to-be sub-surface must not already have another role, and it
-        -- must not have an existing wl_subsurface object. Otherwise a protocol
-        -- error is raised.
+        -- must not have an existing wl_subsurface object. Otherwise the
+        -- bad_surface protocol error is raised.
         -- Adding sub-surfaces to a parent is a double-buffered operation on the
         -- parent (see wl_surface.commit). The effect of adding a sub-surface
         -- becomes visible on the next time the state of the parent surface is
         -- applied.
+        -- The parent surface must not be one of the child surface's descendants,
+        -- and the parent must be different from the child surface, otherwise the
+        -- bad_parent protocol error is raised.
         -- This request modifies the behaviour of wl_surface.commit request on
         -- the sub-surface, see the documentation on wl_subsurface interface.
         -- @function wl_subcompositor:get_subsurface
@@ -3289,8 +3576,10 @@ wau.wl_subcompositor:init {
         --- error
         -- @enum wl_subcompositor.Error
         -- @param BAD_SURFACE 0 the to-be sub-surface is invalid
+        -- @param BAD_PARENT 1 the to-be sub-surface parent is invalid
         ["error"] = {
             ["bad_surface"] = 0,
+            ["bad_parent"] = 1,
         },
     },
     methods_opcode = {
@@ -3335,12 +3624,10 @@ wau.wl_subcompositor:init {
 -- tree of surfaces. This means, that one can set a sub-surface into
 -- synchronized mode, and then assume that all its child and grand-child
 -- sub-surfaces are synchronized, too, without explicitly setting them.
--- If the wl_surface associated with the wl_subsurface is destroyed, the
--- wl_subsurface object becomes inert. Note, that destroying either object
--- takes effect immediately. If you need to synchronize the removal
--- of a sub-surface to the parent surface update, unmap the sub-surface
--- first by attaching a NULL wl_buffer, update parent, and then destroy
--- the sub-surface.
+-- Destroying a sub-surface takes effect immediately. If you need to
+-- synchronize the removal of a sub-surface to the parent surface update,
+-- unmap the sub-surface first by attaching a NULL wl_buffer, update parent,
+-- and then destroy the sub-surface.
 -- If the parent wl_surface object is destroyed, the sub-surface is
 -- unmapped.
 -- @type wl_subsurface
@@ -3353,8 +3640,7 @@ wau.wl_subsurface:init {
         -- The sub-surface interface is removed from the wl_surface object
         -- that was turned into a sub-surface with a
         -- wl_subcompositor.get_subsurface request. The wl_surface's association
-        -- to the parent is deleted, and the wl_surface loses its role as
-        -- a sub-surface. The wl_surface is unmapped immediately.
+        -- to the parent is deleted. The wl_surface is unmapped immediately.
         -- @function wl_subsurface:destroy
         -- @treturn wl_subsurface self
         {
