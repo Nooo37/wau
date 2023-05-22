@@ -30,8 +30,8 @@ jobs:
       - name: Install cffi-lua
         run: |
           git clone https://github.com/q66/cffi-lua cffi
-          git checkout d92fcc95bbde23a44e61b0c86737106246db5904
           cd cffi
+          git checkout d92fcc95bbde23a44e61b0c86737106246db5904
           mkdir build
           cd build
           meson -Dlua_version=5.3 ..
