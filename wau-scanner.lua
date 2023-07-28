@@ -170,7 +170,9 @@ function printer.line(f, ...)
     for _=1,printer.indent do
         indent = string.format("%s ", indent)
     end
-    io.stdout:write("\n", indent, string.format(f, ...))
+    f = string.format(f, ...)
+    f = f:gsub("\n%s*", " ") -- no new lines in one line printed
+    io.stdout:write("\n", indent, f)
     return printer
 end
 
