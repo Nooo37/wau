@@ -104,7 +104,7 @@ end
 
 -- printing
 
-local function convert_type_to_signature(type_name, optional)
+local function convert_type_to_signature(type_name, optional, has_iface)
     local res = optional and "?" or ""
     if type_name == "int" then return res .. "i"
     elseif type_name == "string" then return res .. "s"
@@ -112,7 +112,8 @@ local function convert_type_to_signature(type_name, optional)
     elseif type_name == "fixed" then return res .. "f"
     elseif type_name == "array" then return res .. "a"
     elseif type_name == "object" then return res .. "o"
-    elseif type_name == "new_id" then return res .. "n"
+    elseif type_name == "new_id" and has_iface then return res .. "n"
+    elseif type_name == "new_id" then return res .. "sun"
     elseif type_name == "uint" then return res .. "u"
     else error("Couldn't resolve type", type_name) end
 end
@@ -120,26 +121,24 @@ end
 local function get_message_types(args)
     local types = "{ "
     for _, arg in ipairs(args) do
-        if arg.type == "object" or arg.type == "new_id" then
-            -- check if interface exists (what to do?)
-            local iface = arg.interface
-                and string.format("wau.%s", arg.interface)
-                or "0"
-            types = string.format("%s%s, ", types, iface)
-        else
-            types = types .. "0, "
-        end
+        local fallback = arg.type == "new_id" and "0, 0, 0" or "0"
+        local iface = arg.interface
+            and string.format("wau.%s", arg.interface)
+            or fallback
+        types = types .. iface .. ", "
     end
     return types .. "}"
 end
 
 local function get_message_signature(mes)
-    local signature = mes.since and mes.since or ""
+    local signature = mes.since or ""
     for _, arg in ipairs(mes.args) do
-        signature = signature .. convert_type_to_signature(arg.type,
-            arg["allow-null"] and arg["allow-null"] == "true")
+        signature = signature .. convert_type_to_signature(
+            arg.type,
+            arg["allow-null"] and arg["allow-null"] == "true",
+            arg.interface ~= nil
+        )
     end
-    if signature == "un" then signature = "usun" end -- TODO
     return signature
 end
 

@@ -55,10 +55,10 @@ local mtype = {
 local function get_method_type(method_data)
     local signature = method_data.signature
     local n_idx = signature:find("n")
-    if n_idx and method_data.types[n_idx] ~= nil then
-        return mtype.CONSTRUCTOR
-    elseif n_idx and (method_data.types[n_idx] == nil or method_data.types[n_idx] == 0) then
+    if n_idx and (method_data.types[n_idx] == nil or method_data.types[n_idx] == 0) then
         return mtype.VERSIONED_CONSTRUCTOR
+    elseif n_idx and method_data.types[n_idx] ~= nil then
+        return mtype.CONSTRUCTOR
     elseif method_data.type and method_data.type == "destructor" then
         return mtype.DESTRUCTOR
     else
