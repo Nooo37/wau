@@ -49,6 +49,7 @@ local interfaces = {
     "wl_region",
     "wl_subcompositor",
     "wl_subsurface",
+    "wl_fixes",
 }
 
 for _, iface in ipairs(interfaces) do
@@ -74,7 +75,7 @@ wau.wl_display:init {
         -- The object returned by this request will be destroyed by the
         -- compositor after the callback is fired and as such the client must not
         -- attempt to use it after that point.
-        -- The callback_data passed in the callback is the event serial.
+        -- The callback_data passed in the callback is undefined and should be ignored.
         -- @function wl_display:sync
         -- @treturn wl_callback
         {
@@ -192,7 +193,7 @@ wau.wl_registry:init {
         {
             name = "bind",
             signature = "usun",
-            types = { 0, 0, },
+            types = { 0, 0, 0, 0, },
         },
     },
     events = {
@@ -275,7 +276,7 @@ wau.wl_callback:init {
 -- @type wl_compositor
 wau.wl_compositor:init {
     name = "wl_compositor",
-    version = 6,
+    version = 7,
     methods = {
         --- create new surface
         --
@@ -297,6 +298,17 @@ wau.wl_compositor:init {
             signature = "n",
             types = { wau.wl_region, },
         },
+        --- destroy wl_compositor
+        --
+        -- This request destroys the wl_compositor. This has no effect on any other objects.
+        -- @function wl_compositor:release
+        -- @treturn wl_compositor self
+        {
+            name = "release",
+            signature = "7",
+            types = { },
+            type = "destructor"
+        },
     },
     events = {
     },
@@ -305,6 +317,7 @@ wau.wl_compositor:init {
     methods_opcode = {
         ["create_surface"] = 0,
         ["create_region"] = 1,
+        ["release"] = 2,
     },
 }
 
@@ -320,7 +333,7 @@ wau.wl_compositor:init {
 -- @type wl_shm_pool
 wau.wl_shm_pool:init {
     name = "wl_shm_pool",
-    version = 1,
+    version = 2,
     methods = {
         --- create a buffer from the pool
         --
@@ -402,7 +415,7 @@ wau.wl_shm_pool:init {
 -- @type wl_shm
 wau.wl_shm:init {
     name = "wl_shm",
-    version = 1,
+    version = 2,
     methods = {
         --- create a shm pool
         --
@@ -419,6 +432,19 @@ wau.wl_shm:init {
             signature = "nhi",
             types = { wau.wl_shm_pool, 0, 0, },
         },
+        --- release the shm object
+        --
+        -- Using this request a client can tell the server that it is not going to
+        -- use the shm object anymore.
+        -- Objects created via this interface remain unaffected.
+        -- @function wl_shm:release
+        -- @treturn wl_shm self
+        {
+            name = "release",
+            signature = "2",
+            types = { },
+            type = "destructor"
+        },
     },
     events = {
         --- pixel format description
@@ -426,6 +452,9 @@ wau.wl_shm:init {
         -- Informs the client about a valid pixel format that
         -- can be used for buffers. Known formats include
         -- argb8888 and xrgb8888.
+        -- Extensions to drm_fourcc.h (or the format enum) do not require
+        -- increasing the wl_shm version; as a result, clients may receive format
+        -- codes which were not in the list at the time the client was made.
         -- @event wl_shm:format
         -- @tparam uint format buffer pixel format
         {
@@ -455,7 +484,8 @@ wau.wl_shm:init {
         -- renderer in use.
         -- The drm format codes match the macros defined in drm_fourcc.h, except
         -- argb8888 and xrgb8888. The formats actually supported by the compositor
-        -- will be reported by the format event.
+        -- will be reported by the format event. See drm_fourcc.h for more detailed
+        -- format descriptions.
         -- For all wl_shm formats and unless specified in another protocol
         -- extension, pre-multiplied alpha is used for pixel values.
         -- @enum wl_shm.Format
@@ -582,6 +612,26 @@ wau.wl_shm:init {
         -- @param AVUY8888 0x59555641 [31:0] A:Cr:Cb:Y 8:8:8:8 little endian
         -- @param XVUY8888 0x59555658 [31:0] X:Cr:Cb:Y 8:8:8:8 little endian
         -- @param P030 0x30333050 2x2 subsampled Cr:Cb plane 10 bits per channel packed
+        -- @param RGB161616 0x38344752 [47:0] R:G:B 16:16:16 little endian
+        -- @param BGR161616 0x38344742 [47:0] B:G:R 16:16:16 little endian
+        -- @param R16F 0x48202052 [15:0] R 16 little endian
+        -- @param GR1616F 0x48205247 [31:0] G:R 16:16 little endian
+        -- @param BGR161616F 0x48524742 [47:0] B:G:R 16:16:16 little endian
+        -- @param R32F 0x46202052 [31:0] R 32 little endian
+        -- @param GR3232F 0x46205247 [63:0] R:G 32:32 little endian
+        -- @param BGR323232F 0x46524742 [95:0] R:G:B 32:32:32 little endian
+        -- @param ABGR32323232F 0x46384241 [127:0] R:G:B:A 32:32:32:32 little endian
+        -- @param NV20 0x3032564e 2x1 subsampled Cr:Cb plane
+        -- @param NV30 0x3033564e non-subsampled Cr:Cb plane
+        -- @param S010 0x30313053 2x2 subsampled Cb (1) and Cr (2) planes 10 bits per channel
+        -- @param S210 0x30313253 2x1 subsampled Cb (1) and Cr (2) planes 10 bits per channel
+        -- @param S410 0x30313453 non-subsampled Cb (1) and Cr (2) planes 10 bits per channel
+        -- @param S012 0x32313053 2x2 subsampled Cb (1) and Cr (2) planes 12 bits per channel
+        -- @param S212 0x32313253 2x1 subsampled Cb (1) and Cr (2) planes 12 bits per channel
+        -- @param S412 0x32313453 non-subsampled Cb (1) and Cr (2) planes 12 bits per channel
+        -- @param S016 0x36313053 2x2 subsampled Cb (1) and Cr (2) planes 16 bits per channel
+        -- @param S216 0x36313253 2x1 subsampled Cb (1) and Cr (2) planes 16 bits per channel
+        -- @param S416 0x36313453 non-subsampled Cb (1) and Cr (2) planes 16 bits per channel
         ["format"] = {
             ["argb8888"] = 0,
             ["xrgb8888"] = 1,
@@ -706,10 +756,31 @@ wau.wl_shm:init {
             ["avuy8888"] = 0x59555641,
             ["xvuy8888"] = 0x59555658,
             ["p030"] = 0x30333050,
+            ["rgb161616"] = 0x38344752,
+            ["bgr161616"] = 0x38344742,
+            ["r16f"] = 0x48202052,
+            ["gr1616f"] = 0x48205247,
+            ["bgr161616f"] = 0x48524742,
+            ["r32f"] = 0x46202052,
+            ["gr3232f"] = 0x46205247,
+            ["bgr323232f"] = 0x46524742,
+            ["abgr32323232f"] = 0x46384241,
+            ["nv20"] = 0x3032564e,
+            ["nv30"] = 0x3033564e,
+            ["s010"] = 0x30313053,
+            ["s210"] = 0x30313253,
+            ["s410"] = 0x30313453,
+            ["s012"] = 0x32313053,
+            ["s212"] = 0x32313253,
+            ["s412"] = 0x32313453,
+            ["s016"] = 0x36313053,
+            ["s216"] = 0x36313253,
+            ["s416"] = 0x36313453,
         },
     },
     methods_opcode = {
         ["create_pool"] = 0,
+        ["release"] = 1,
     },
 }
 
@@ -721,9 +792,11 @@ wau.wl_shm:init {
 -- a height and can be attached to a wl_surface, but the mechanism by which a
 -- client provides and updates the contents is defined by the buffer factory
 -- interface.
--- If the buffer uses a format that has an alpha channel, the alpha channel
--- is assumed to be premultiplied in the color channels unless otherwise
--- specified.
+-- Color channels are assumed to be electrical rather than optical (in other
+-- words, encoded with a transfer function) unless otherwise specified. If
+-- the buffer uses a format that has an alpha channel, the alpha channel is
+-- assumed to be premultiplied into the electrical color channel values
+-- (after transfer function encoding) unless otherwise specified.
 -- Note, because wl_buffer objects are created from multiple independent
 -- factory interfaces, the wl_buffer interface is frozen at version 1.
 -- @type wl_buffer
@@ -749,8 +822,9 @@ wau.wl_buffer:init {
         --- compositor releases buffer
         --
         -- Sent when this wl_buffer is no longer used by the compositor.
-        -- The client is now free to reuse or destroy this buffer and its
-        -- backing storage.
+        -- For more information on when release events may or may not be sent,
+        -- and what consequences it has, please see the description of
+        -- wl_surface.attach.
         -- If a client receives a release event before the frame callback
         -- requested in the same wl_surface.commit that attaches this
         -- wl_buffer to a surface, then the client is immediately free to
@@ -784,7 +858,7 @@ wau.wl_buffer:init {
 -- @type wl_data_offer
 wau.wl_data_offer:init {
     name = "wl_data_offer",
-    version = 3,
+    version = 4,
     methods = {
         --- accept one of the offered mime types
         --
@@ -997,7 +1071,7 @@ wau.wl_data_offer:init {
 -- @type wl_data_source
 wau.wl_data_source:init {
     name = "wl_data_source",
-    version = 3,
+    version = 4,
     methods = {
         --- add an offered mime type
         --
@@ -1180,7 +1254,7 @@ wau.wl_data_source:init {
 -- @type wl_data_device
 wau.wl_data_device:init {
     name = "wl_data_device",
-    version = 3,
+    version = 4,
     methods = {
         --- start drag-and-drop operation
         --
@@ -1198,7 +1272,7 @@ wau.wl_data_device:init {
         -- The icon surface is an optional (can be NULL) surface that
         -- provides an icon to be moved around with the cursor.  Initially,
         -- the top-left corner of the icon surface is placed at the cursor
-        -- hotspot, but subsequent wl_surface.attach request can move the
+        -- hotspot, but subsequent wl_surface.offset requests can move the
         -- relative position. Attach requests must be confirmed with
         -- wl_surface.commit as usual. The icon surface is given the role of
         -- a drag-and-drop icon. If the icon surface already has another role,
@@ -1380,7 +1454,7 @@ wau.wl_data_device:init {
 -- @type wl_data_device_manager
 wau.wl_data_device_manager:init {
     name = "wl_data_device_manager",
-    version = 3,
+    version = 4,
     methods = {
         --- create a new data source
         --
@@ -1402,6 +1476,18 @@ wau.wl_data_device_manager:init {
             name = "get_data_device",
             signature = "no",
             types = { wau.wl_data_device, wau.wl_seat, },
+        },
+        --- destroy wl_data_device_manager
+        --
+        -- This request destroys the wl_data_device_manager. This has no effect on any other
+        -- objects.
+        -- @function wl_data_device_manager:release
+        -- @treturn wl_data_device_manager self
+        {
+            name = "release",
+            signature = "4",
+            types = { },
+            type = "destructor"
         },
     },
     events = {
@@ -1443,6 +1529,7 @@ wau.wl_data_device_manager:init {
     methods_opcode = {
         ["create_data_source"] = 0,
         ["get_data_device"] = 1,
+        ["release"] = 2,
     },
 }
 
@@ -1860,7 +1947,7 @@ wau.wl_shell_surface:init {
 -- @type wl_surface
 wau.wl_surface:init {
     name = "wl_surface",
-    version = 6,
+    version = 7,
     methods = {
         --- delete surface
         --
@@ -1912,8 +1999,11 @@ wau.wl_surface:init {
         -- If a pending wl_buffer has been committed to more than one wl_surface,
         -- the delivery of wl_buffer.release events becomes undefined. A well
         -- behaved client should not rely on wl_buffer.release events in this
-        -- case. Alternatively, a client could create multiple wl_buffer objects
-        -- from the same backing storage or use wp_linux_buffer_release.
+        -- case. Instead, clients hitting this case should use
+        -- wl_surface.get_release or use a protocol extension providing per-commit
+        -- release notifications (if none of these options are available, a
+        -- fallback can be implemented by creating multiple wl_buffer objects from
+        -- the same backing storage).
         -- Destroying the wl_buffer after wl_buffer.release does not change
         -- the surface contents. Destroying the wl_buffer before wl_buffer.release
         -- is allowed as long as the underlying buffer storage isn't re-used (this
@@ -1923,6 +2013,12 @@ wau.wl_surface:init {
         -- undefined immediately.
         -- If wl_surface.attach is sent with a NULL wl_buffer, the
         -- following wl_surface.commit will remove the surface content.
+        -- If a pending wl_buffer has been destroyed, the result is not specified.
+        -- Many compositors are known to remove the surface content on the following
+        -- wl_surface.commit, but this behaviour is not universal. Clients seeking to
+        -- maximise compatibility should not destroy pending buffers and should
+        -- ensure that they explicitly remove content from surfaces, even after
+        -- destroying buffers.
         -- @function wl_surface:attach
         -- @tparam wl_buffer buffer buffer of surface contents
         -- @tparam int x surface-local x coordinate
@@ -2056,18 +2152,40 @@ wau.wl_surface:init {
         --
         -- Surface state (input, opaque, and damage regions, attached buffers,
         -- etc.) is double-buffered. Protocol requests modify the pending state,
-        -- as opposed to the current state in use by the compositor. A commit
-        -- request atomically applies all pending state, replacing the current
-        -- state. After commit, the new pending state is as documented for each
-        -- related request.
-        -- On commit, a pending wl_buffer is applied first, and all other state
-        -- second. This means that all coordinates in double-buffered state are
-        -- relative to the new wl_buffer coming into use, except for
-        -- wl_surface.attach itself. If there is no pending wl_buffer, the
-        -- coordinates are relative to the current surface contents.
+        -- as opposed to the active state in use by the compositor.
         -- All requests that need a commit to become effective are documented
         -- to affect double-buffered state.
         -- Other interfaces may add further double-buffered surface state.
+        -- A commit request atomically creates a Content Update (CU) from the
+        -- pending state, even if the pending state has not been touched. The
+        -- content update is placed at the end of a per-surface queue until it
+        -- becomes active. After commit, the new pending state is as documented for
+        -- each related request.
+        -- A CU is either a Desync Content Update (DCU) or a Sync Content Update
+        -- (SCU). If the surface is effectively synchronized at the commit request,
+        -- it is a SCU, otherwise a DCU.
+        -- When a surface transitions from effectively synchronized to effectively
+        -- desynchronized, all SCUs in its queue which are not reachable by any
+        -- DCU become DCUs and dependency edges from outside the queue to these CUs
+        -- are removed.
+        -- See wl_subsurface for the definition of 'effectively synchronized' and
+        -- 'effectively desynchronized'.
+        -- When a CU is placed in the queue, the CU has a dependency on the CU in
+        -- front of it and to the SCU at end of the queue of every direct child
+        -- surface if that SCU exists and does not have another dependent. This can
+        -- form a directed acyclic graph of CUs with dependencies as edges.
+        -- In addition to surface state, the CU can have constraints that must be
+        -- satisfied before it can be applied. Other interfaces may add CU
+        -- constraints.
+        -- All DCUs which do not have a SCU in front of themselves in their queue,
+        -- are candidates. If the graph that's reachable by a candidate does not
+        -- have any unsatisfied constraints, the entire graph must be applied
+        -- atomically.
+        -- When a CU is applied, the wl_buffer is applied before all other state.
+        -- This means that all coordinates in double-buffered state are relative to
+        -- the newly attached wl_buffers, except for wl_surface.attach itself. If
+        -- there is no newly attached wl_buffer, the coordinates are relative to
+        -- the previous content update.
         -- @function wl_surface:commit
         -- @treturn wl_surface self
         {
@@ -2077,10 +2195,11 @@ wau.wl_surface:init {
         },
         --- sets the buffer transformation
         --
-        -- This request sets an optional transformation on how the compositor
-        -- interprets the contents of the buffer attached to the surface. The
-        -- accepted values for the transform parameter are the values for
-        -- wl_output.transform.
+        -- This request sets the transformation that the client has already applied
+        -- to the content of the buffer. The accepted values for the transform
+        -- parameter are the values for wl_output.transform.
+        -- The compositor applies the inverse of this transformation whenever it
+        -- uses the buffer contents.
         -- Buffer transform is double-buffered state, see wl_surface.commit.
         -- A newly created surface has its buffer transformation set to normal.
         -- wl_surface.set_buffer_transform changes the pending buffer
@@ -2125,10 +2244,10 @@ wau.wl_surface:init {
         -- Note that if the scale is larger than 1, then you have to attach
         -- a buffer that is larger (by a factor of scale in each dimension)
         -- than the desired surface size.
-        -- If scale is not positive the invalid_scale protocol error is
+        -- If scale is not greater than 0 the invalid_scale protocol error is
         -- raised.
         -- @function wl_surface:set_buffer_scale
-        -- @tparam int scale positive scale for interpreting buffer contents
+        -- @tparam int scale scale for interpreting buffer contents
         -- @treturn wl_surface self
         {
             name = "set_buffer_scale",
@@ -2181,6 +2300,8 @@ wau.wl_surface:init {
         -- left corner, in surface-local coordinates. In other words, the
         -- x and y, combined with the new surface size define in which
         -- directions the surface's size changes.
+        -- The exact semantics of wl_surface.offset are role-specific. Refer to
+        -- the documentation of specific roles for more information.
         -- Surface location offset is double-buffered state, see
         -- wl_surface.commit.
         -- This request is semantically equivalent to and the replaces the x and y
@@ -2194,6 +2315,29 @@ wau.wl_surface:init {
             name = "offset",
             signature = "5ii",
             types = { 0, 0, },
+        },
+        --- get a release callback
+        --
+        -- Create a callback for the release of the buffer attached by the client
+        -- with wl_surface.attach.
+        -- The compositor will release the buffer when it has finished its usage of
+        -- the underlying storage for the relevant commit. Once the client receives
+        -- this event, and assuming the associated buffer is not pending release
+        -- from other wl_surface.commit requests, the client can safely re-use the
+        -- buffer.
+        -- Release callbacks are double-buffered state, and will be associated
+        -- with the pending buffer at wl_surface.commit time.
+        -- The callback_data passed in the wl_callback.done event is unused and
+        -- is always zero.
+        -- Sending this request without attaching a non-null buffer in the same
+        -- content update is a protocol error. The compositor will send the
+        -- no_buffer error in this case.
+        -- @function wl_surface:get_release
+        -- @treturn wl_callback
+        {
+            name = "get_release",
+            signature = "7n",
+            types = { wau.wl_callback, },
         },
     },
     events = {
@@ -2231,10 +2375,13 @@ wau.wl_surface:init {
         --
         -- This event indicates the preferred buffer scale for this surface. It is
         -- sent whenever the compositor's preference changes.
+        -- Before receiving this event the preferred buffer scale for this surface
+        -- is 1.
         -- It is intended that scaling aware clients use this event to scale their
         -- content and use wl_surface.set_buffer_scale to indicate the scale they
         -- have rendered with. This allows clients to supply a higher detail
         -- buffer.
+        -- The compositor shall emit a scale value greater than 0.
         -- @event wl_surface:preferred_buffer_scale
         -- @tparam int factor preferred scaling factor
         {
@@ -2246,9 +2393,11 @@ wau.wl_surface:init {
         --
         -- This event indicates the preferred buffer transform for this surface.
         -- It is sent whenever the compositor's preference changes.
-        -- It is intended that transform aware clients use this event to apply the
-        -- transform to their content and use wl_surface.set_buffer_transform to
-        -- indicate the transform they have rendered with.
+        -- Before receiving this event the preferred buffer transform for this
+        -- surface is normal.
+        -- Applying this transformation to the surface buffer contents and using
+        -- wl_surface.set_buffer_transform might allow the compositor to use the
+        -- surface buffer more efficiently.
         -- @event wl_surface:preferred_buffer_transform
         -- @tparam uint transform preferred transform
         {
@@ -2267,12 +2416,14 @@ wau.wl_surface:init {
         -- @param INVALID_SIZE 2 buffer size is invalid
         -- @param INVALID_OFFSET 3 buffer offset is invalid
         -- @param DEFUNCT_ROLE_OBJECT 4 surface was destroyed before its role object
+        -- @param NO_BUFFER 5 no buffer was attached
         ["error"] = {
             ["invalid_scale"] = 0,
             ["invalid_transform"] = 1,
             ["invalid_size"] = 2,
             ["invalid_offset"] = 3,
             ["defunct_role_object"] = 4,
+            ["no_buffer"] = 5,
         },
     },
     methods_opcode = {
@@ -2287,6 +2438,7 @@ wau.wl_surface:init {
         ["set_buffer_scale"] = 8,
         ["damage_buffer"] = 9,
         ["offset"] = 10,
+        ["get_release"] = 11,
     },
 }
 
@@ -2299,7 +2451,7 @@ wau.wl_surface:init {
 -- @type wl_seat
 wau.wl_seat:init {
     name = "wl_seat",
-    version = 9,
+    version = 10,
     methods = {
         --- return pointer object
         --
@@ -2365,9 +2517,10 @@ wau.wl_seat:init {
     events = {
         --- seat capabilities changed
         --
-        -- This is emitted whenever a seat gains or loses the pointer,
-        -- keyboard or touch capabilities.  The argument is a capability
-        -- enum containing the complete set of capabilities this seat has.
+        -- This is sent on binding to the seat global or whenever a seat gains
+        -- or loses the pointer, keyboard or touch capabilities.
+        -- The argument is a capability enum containing the complete set of
+        -- capabilities this seat has.
         -- When the pointer capability is added, a client may create a
         -- wl_pointer object using the wl_seat.get_pointer request. This object
         -- will receive pointer events until the capability is removed in the
@@ -2401,9 +2554,9 @@ wau.wl_seat:init {
         -- only guaranteed to be unique for the current compositor instance.
         -- The same seat names are used for all clients. Thus, the name can be
         -- shared across processes to refer to a specific wl_seat global.
-        -- The name event is sent after binding to the seat global. This event is
-        -- only sent once per seat object, and the name does not change over the
-        -- lifetime of the wl_seat global.
+        -- The name event is sent after binding to the seat global, and should be sent
+        -- before announcing capabilities. This event only sent once per seat object,
+        -- and the name does not change over the lifetime of the wl_seat global.
         -- Compositors may re-use the same seat name if the wl_seat global is
         -- destroyed and re-created later.
         -- @event wl_seat:name
@@ -2457,7 +2610,7 @@ wau.wl_seat:init {
 -- @type wl_pointer
 wau.wl_pointer:init {
     name = "wl_pointer",
-    version = 9,
+    version = 10,
     methods = {
         --- set the pointer surface
         --
@@ -2475,9 +2628,9 @@ wau.wl_pointer:init {
         -- top-left corner is always at (x, y) - (hotspot_x, hotspot_y),
         -- where (x, y) are the coordinates of the pointer location, in
         -- surface-local coordinates.
-        -- On surface.attach requests to the pointer surface, hotspot_x
+        -- On wl_surface.offset requests to the pointer surface, hotspot_x
         -- and hotspot_y are decremented by the x and y parameters
-        -- passed to the request. Attach must be confirmed by
+        -- passed to the request. The offset must be applied by
         -- wl_surface.commit as usual.
         -- The hotspot can also be updated by passing the currently set
         -- pointer surface to this request with new values for hotspot_x
@@ -2871,10 +3024,17 @@ wau.wl_pointer:init {
 --
 -- The wl_keyboard interface represents one or more keyboards
 -- associated with a seat.
+-- Each wl_keyboard has the following logical state:
+-- - an active surface (possibly null),
+-- - the keys currently logically down,
+-- - the active modifiers,
+-- - the active group.
+-- By default, the active surface is null, the keys currently logically down
+-- are empty, the active modifiers and the active group are 0.
 -- @type wl_keyboard
 wau.wl_keyboard:init {
     name = "wl_keyboard",
-    version = 9,
+    version = 10,
     methods = {
         --- release the keyboard object
         -- @function wl_keyboard:release
@@ -2909,10 +3069,16 @@ wau.wl_keyboard:init {
         -- surface.
         -- The compositor must send the wl_keyboard.modifiers event after this
         -- event.
+        -- In the wl_keyboard logical state, this event sets the active surface to
+        -- the surface argument and the keys currently logically down to the keys
+        -- in the keys argument. The compositor must not send this event if the
+        -- wl_keyboard already had an active surface immediately before this event.
+        -- Clients should not use the list of pressed keys to emulate key-press
+        -- events. The order of keys in the list is unspecified.
         -- @event wl_keyboard:enter
         -- @tparam uint serial serial number of the enter event
         -- @tparam wl_surface surface surface gaining keyboard focus
-        -- @tparam array keys the currently pressed keys
+        -- @tparam array keys the keys currently logically down
         {
             name = "enter",
             signature = "uoa",
@@ -2924,10 +3090,10 @@ wau.wl_keyboard:init {
         -- a certain surface.
         -- The leave notification is sent before the enter notification
         -- for the new focus.
-        -- After this event client must assume that no keys are pressed,
-        -- it must stop key repeating if there's some going on and until
-        -- it receives the next wl_keyboard.modifiers event, the client
-        -- must also assume no modifiers are active.
+        -- In the wl_keyboard logical state, this event resets all values to their
+        -- defaults. The compositor must not send this event if the active surface
+        -- of the wl_keyboard was not equal to the surface argument immediately
+        -- before this event.
         -- @event wl_keyboard:leave
         -- @tparam uint serial serial number of the leave event
         -- @tparam wl_surface surface surface that lost keyboard focus
@@ -2945,8 +3111,18 @@ wau.wl_keyboard:init {
         -- by feeding it to the keyboard mapping (see the keymap event).
         -- If this event produces a change in modifiers, then the resulting
         -- wl_keyboard.modifiers event must be sent after this event.
-        -- The compositor must not send this event without a surface of the client
-        -- having keyboard focus.
+        -- In the wl_keyboard logical state, this event adds the key to the keys
+        -- currently logically down (if the state argument is pressed) or removes
+        -- the key from the keys currently logically down (if the state argument is
+        -- released). The compositor must not send this event if the wl_keyboard
+        -- did not have an active surface immediately before this event. The
+        -- compositor must not send this event if state is pressed (resp. released)
+        -- and the key was already logically down (resp. was not logically down)
+        -- immediately before this event.
+        -- Since version 10, compositors may send key events with the "repeated"
+        -- key state when a wl_keyboard.repeat_info event with a rate argument of
+        -- 0 has been received. This allows the compositor to take over the
+        -- responsibility of key repetition.
         -- @event wl_keyboard:key
         -- @tparam uint serial serial number of the key event
         -- @tparam uint time timestamp with millisecond granularity
@@ -2968,6 +3144,8 @@ wau.wl_keyboard:init {
         -- valid until it receives the next wl_keyboard.modifiers event. In order to
         -- reset the modifier state again, the compositor can send a
         -- wl_keyboard.modifiers event with no pressed modifiers.
+        -- In the wl_keyboard logical state, this event updates the modifiers and
+        -- group.
         -- @event wl_keyboard:modifiers
         -- @tparam uint serial serial number of the modifiers event
         -- @tparam uint mods_depressed depressed modifiers
@@ -3014,12 +3192,20 @@ wau.wl_keyboard:init {
         --- physical key state
         --
         -- Describes the physical state of a key that produced the key event.
+        -- Since version 10, the key can be in a "repeated" pseudo-state which
+        -- means the same as "pressed", but is used to signal repetition in the
+        -- key event.
+        -- The key may only enter the repeated state after entering the pressed
+        -- state and before entering the released state. This event may be
+        -- generated multiple times while the key is down.
         -- @enum wl_keyboard.KeyState
         -- @param RELEASED 0 key is not pressed
         -- @param PRESSED 1 key is pressed
+        -- @param REPEATED 2 key was repeated
         ["key_state"] = {
             ["released"] = 0,
             ["pressed"] = 1,
+            ["repeated"] = 2,
         },
     },
     methods_opcode = {
@@ -3039,7 +3225,7 @@ wau.wl_keyboard:init {
 -- @type wl_touch
 wau.wl_touch:init {
     name = "wl_touch",
-    version = 9,
+    version = 10,
     methods = {
         --- release the touch object
         -- @function wl_touch:release
@@ -3120,6 +3306,7 @@ wau.wl_touch:init {
         -- currently active on this client's surface. The client is
         -- responsible for finalizing the touch points, future touch points on
         -- this surface may reuse the touch point ID.
+        -- No frame event is required after the cancel event.
         -- @event wl_touch:cancel
         {
             name = "cancel",
@@ -3231,6 +3418,9 @@ wau.wl_output:init {
         -- output (e.g. for projectors or virtual outputs).
         -- The geometry event will be followed by a done event (starting from
         -- version 2).
+        -- Clients should use wl_surface.preferred_buffer_transform instead of the
+        -- transform advertised by this event to find the preferred buffer
+        -- transform to use for a surface.
         -- Note: wl_output only advertises partial information about the output
         -- position and identification. Some compositors, for instance those not
         -- implementing a desktop-style output layout or those exposing virtual
@@ -3245,7 +3435,7 @@ wau.wl_output:init {
         -- @tparam int subpixel subpixel orientation of the output
         -- @tparam string make textual description of the manufacturer
         -- @tparam string model textual description of the model
-        -- @tparam int transform transform that maps framebuffer to output
+        -- @tparam int transform additional transformation applied to buffer contents during presentation
         {
             name = "geometry",
             signature = "iiiiissi",
@@ -3307,19 +3497,17 @@ wau.wl_output:init {
         -- This event contains scaling geometry information
         -- that is not in the geometry event. It may be sent after
         -- binding the output object or if the output scale changes
-        -- later. If it is not sent, the client should assume a
-        -- scale of 1.
+        -- later. The compositor will emit a non-zero, positive
+        -- value for scale. If it is not sent, the client should
+        -- assume a scale of 1.
         -- A scale larger than 1 means that the compositor will
         -- automatically scale surface buffers by this amount
         -- when rendering. This is used for very high resolution
         -- displays where applications rendering at the native
         -- resolution would be too small to be legible.
-        -- It is intended that scaling aware clients track the
-        -- current output of a surface, and if it is on a scaled
-        -- output it should use wl_surface.set_buffer_scale with
-        -- the scale of the output. That way the compositor can
-        -- avoid scaling the surface, and the client can supply
-        -- a higher detail image.
+        -- Clients should use wl_surface.preferred_buffer_scale
+        -- instead of this event to find the preferred buffer
+        -- scale to use for a surface.
         -- The scale event will be followed by a done event.
         -- @event wl_output:scale
         -- @tparam int factor scaling factor of output
@@ -3399,11 +3587,10 @@ wau.wl_output:init {
             ["vertical_rgb"] = 4,
             ["vertical_bgr"] = 5,
         },
-        --- transform from framebuffer to output
+        --- transformation applied to buffer contents
         --
-        -- This describes the transform that a compositor will apply to a
-        -- surface to compensate for the rotation or mirroring of an
-        -- output device.
+        -- This describes transformations that clients and compositors apply to
+        -- buffer contents.
         -- The flipped values correspond to an initial flip around a
         -- vertical axis followed by rotation.
         -- The purpose is mainly to allow clients to render accordingly and
@@ -3454,7 +3641,7 @@ wau.wl_output:init {
 -- @type wl_region
 wau.wl_region:init {
     name = "wl_region",
-    version = 1,
+    version = 7,
     methods = {
         --- destroy region
         --
@@ -3600,22 +3787,9 @@ wau.wl_subcompositor:init {
 -- first is irrelevant. A sub-surface is hidden if the parent becomes
 -- hidden, or if a NULL wl_buffer is applied. These rules apply
 -- recursively through the tree of surfaces.
--- The behaviour of a wl_surface.commit request on a sub-surface
--- depends on the sub-surface's mode. The possible modes are
--- synchronized and desynchronized, see methods
--- wl_subsurface.set_sync and wl_subsurface.set_desync. Synchronized
--- mode caches the wl_surface state to be applied when the parent's
--- state gets applied, and desynchronized mode applies the pending
--- wl_surface state directly. A sub-surface is initially in the
--- synchronized mode.
--- Sub-surfaces also have another kind of state, which is managed by
--- wl_subsurface requests, as opposed to wl_surface requests. This
--- state includes the sub-surface position relative to the parent
--- surface (wl_subsurface.set_position), and the stacking order of
--- the parent and its sub-surfaces (wl_subsurface.place_above and
--- .place_below). This state is applied when the parent surface's
--- wl_surface state is applied, regardless of the sub-surface's mode.
--- As the exception, set_sync and set_desync are effective immediately.
+-- A sub-surface can be in one of two modes. The possible modes are
+-- synchronized and desynchronized, see methods wl_subsurface.set_sync and
+-- wl_subsurface.set_desync.
 -- The main surface can be thought to be always in desynchronized mode,
 -- since it does not have a parent in the sub-surfaces sense.
 -- Even if a sub-surface is in desynchronized mode, it will behave as
@@ -3624,12 +3798,21 @@ wau.wl_subcompositor:init {
 -- tree of surfaces. This means, that one can set a sub-surface into
 -- synchronized mode, and then assume that all its child and grand-child
 -- sub-surfaces are synchronized, too, without explicitly setting them.
+-- If a surface behaves as in synchronized mode, it is effectively
+-- synchronized, otherwise it is effectively desynchronized.
+-- A sub-surface is initially in the synchronized mode.
+-- The wl_subsurface interface has requests which modify double-buffered
+-- state of the parent surface (wl_subsurface.set_position, .place_above and
+-- .place_below).
 -- Destroying a sub-surface takes effect immediately. If you need to
 -- synchronize the removal of a sub-surface to the parent surface update,
 -- unmap the sub-surface first by attaching a NULL wl_buffer, update parent,
 -- and then destroy the sub-surface.
 -- If the parent wl_surface object is destroyed, the sub-surface is
 -- unmapped.
+-- A sub-surface never has the keyboard focus of any seat.
+-- The wl_surface.offset request is ignored: clients must use set_position
+-- instead to move the sub-surface.
 -- @type wl_subsurface
 wau.wl_subsurface:init {
     name = "wl_subsurface",
@@ -3651,19 +3834,15 @@ wau.wl_subsurface:init {
         },
         --- reposition the sub-surface
         --
-        -- This schedules a sub-surface position change.
+        -- This sets the position of the sub-surface, relative to the parent
+        -- surface.
         -- The sub-surface will be moved so that its origin (top left
         -- corner pixel) will be at the location x, y of the parent surface
         -- coordinate system. The coordinates are not restricted to the parent
         -- surface area. Negative values are allowed.
-        -- The scheduled coordinates will take effect whenever the state of the
-        -- parent surface is applied. When this happens depends on whether the
-        -- parent surface is in synchronized mode or not. See
-        -- wl_subsurface.set_sync and wl_subsurface.set_desync for details.
-        -- If more than one set_position request is invoked by the client before
-        -- the commit of the parent surface, the position of a new request always
-        -- replaces the scheduled position from any previous request.
         -- The initial position is 0, 0.
+        -- Position is double-buffered state on the parent surface, see
+        -- wl_subsurface and wl_surface.commit for more information.
         -- @function wl_subsurface:set_position
         -- @tparam int x x coordinate in the parent surface
         -- @tparam int y y coordinate in the parent surface
@@ -3680,14 +3859,10 @@ wau.wl_subsurface:init {
         -- The reference surface must be one of the sibling surfaces, or the
         -- parent surface. Using any other surface, including this sub-surface,
         -- will cause a protocol error.
-        -- The z-order is double-buffered. Requests are handled in order and
-        -- applied immediately to a pending state. The final pending state is
-        -- copied to the active state the next time the state of the parent
-        -- surface is applied. When this happens depends on whether the parent
-        -- surface is in synchronized mode or not. See wl_subsurface.set_sync and
-        -- wl_subsurface.set_desync for details.
         -- A new sub-surface is initially added as the top-most in the stack
         -- of its siblings and parent.
+        -- Z-order is double-buffered state on the parent surface, see
+        -- wl_subsurface and wl_surface.commit for more information.
         -- @function wl_subsurface:place_above
         -- @tparam wl_surface sibling the reference surface
         -- @treturn wl_subsurface self
@@ -3711,16 +3886,8 @@ wau.wl_subsurface:init {
         --- set sub-surface to synchronized mode
         --
         -- Change the commit behaviour of the sub-surface to synchronized
-        -- mode, also described as the parent dependent mode.
-        -- In synchronized mode, wl_surface.commit on a sub-surface will
-        -- accumulate the committed state in a cache, but the state will
-        -- not be applied and hence will not change the compositor output.
-        -- The cached state is applied to the sub-surface immediately after
-        -- the parent surface's state is applied. This ensures atomic
-        -- updates of the parent and all its synchronized sub-surfaces.
-        -- Applying the cached state will invalidate the cache, so further
-        -- parent surface commits do not (re-)apply old state.
-        -- See wl_subsurface for the recursive effect of this mode.
+        -- mode.
+        -- See wl_subsurface and wl_surface.commit for more information.
         -- @function wl_subsurface:set_sync
         -- @treturn wl_subsurface self
         {
@@ -3731,20 +3898,8 @@ wau.wl_subsurface:init {
         --- set sub-surface to desynchronized mode
         --
         -- Change the commit behaviour of the sub-surface to desynchronized
-        -- mode, also described as independent or freely running mode.
-        -- In desynchronized mode, wl_surface.commit on a sub-surface will
-        -- apply the pending state directly, without caching, as happens
-        -- normally with a wl_surface. Calling wl_surface.commit on the
-        -- parent surface has no effect on the sub-surface's wl_surface
-        -- state. This mode allows a sub-surface to be updated on its own.
-        -- If cached state exists when wl_surface.commit is called in
-        -- desynchronized mode, the pending state is added to the cached
-        -- state, and applied as a whole. This invalidates the cache.
-        -- Note: even if a sub-surface is set to desynchronized, a parent
-        -- sub-surface may override it to behave as synchronized. For details,
-        -- see wl_subsurface.
-        -- If a surface's parent surface behaves as desynchronized, then
-        -- the cached state is applied on set_desync.
+        -- mode.
+        -- See wl_subsurface and wl_surface.commit for more information.
         -- @function wl_subsurface:set_desync
         -- @treturn wl_subsurface self
         {
@@ -3770,6 +3925,89 @@ wau.wl_subsurface:init {
         ["place_below"] = 3,
         ["set_sync"] = 4,
         ["set_desync"] = 5,
+    },
+}
+
+--- wayland protocol fixes
+--
+-- This global fixes problems with other core-protocol interfaces that
+-- cannot be fixed in these interfaces themselves.
+-- @type wl_fixes
+wau.wl_fixes:init {
+    name = "wl_fixes",
+    version = 2,
+    methods = {
+        --- destroys this object
+        -- @function wl_fixes:destroy
+        -- @treturn wl_fixes self
+        {
+            name = "destroy",
+            signature = "",
+            types = { },
+            type = "destructor"
+        },
+        --- destroy a wl_registry
+        --
+        -- This request destroys a wl_registry object.
+        -- The client should no longer use the wl_registry after making this
+        -- request.
+        -- The compositor will emit a wl_display.delete_id event with the object ID
+        -- of the registry and will no longer emit any events on the registry. The
+        -- client should re-use the object ID once it receives the
+        -- wl_display.delete_id event.
+        -- @function wl_fixes:destroy_registry
+        -- @tparam wl_registry registry the registry to destroy
+        -- @treturn wl_fixes self
+        {
+            name = "destroy_registry",
+            signature = "o",
+            types = { wau.wl_registry, },
+        },
+        --- acknowledge global removal
+        --
+        -- Acknowledge the removal of the specified global.
+        -- If no global with the specified name exists or the global is not removed,
+        -- the wl_fixes.invalid_ack_remove protocol error will be posted.
+        -- Due to the Wayland protocol being asynchronous, the wl_global objects
+        -- cannot be destroyed immediately. For example, if a wl_global is removed
+        -- and a client attempts to bind that global around same time, it can
+        -- result in a protocol error due to an unknown global name in the bind
+        -- request.
+        -- In order to avoid crashing clients, the compositor should remove the
+        -- wl_global once it is guaranteed that no more bind requests will come.
+        -- The wl_fixes.ack_global_remove() request is used to signal to the
+        -- compositor that the client will not bind the given global anymore. After
+        -- all clients acknowledge the removal of the global, the compositor can
+        -- safely destroy it.
+        -- The client must call the wl_fixes.ack_global_remove() request in
+        -- response to a wl_registry.global_remove() event even if it did not bind
+        -- the corresponding global.
+        -- @function wl_fixes:ack_global_remove
+        -- @tparam wl_registry registry the registry object
+        -- @tparam uint name unique name of the global
+        -- @treturn wl_fixes self
+        {
+            name = "ack_global_remove",
+            signature = "2ou",
+            types = { wau.wl_registry, 0, },
+        },
+    },
+    events = {
+    },
+    enums = {
+        --- wl_fixes error values
+        --
+        -- These errors can be emitted in response to wl_fixes requests.
+        -- @enum wl_fixes.Error
+        -- @param INVALID_ACK_REMOVE 0 unknown global or the global is not removed
+        ["error"] = {
+            ["invalid_ack_remove"] = 0,
+        },
+    },
+    methods_opcode = {
+        ["destroy"] = 0,
+        ["destroy_registry"] = 1,
+        ["ack_global_remove"] = 2,
     },
 }
 
