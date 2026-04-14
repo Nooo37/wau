@@ -117,13 +117,13 @@ function M:marshal(opcode, ...)
 end
 
 function M:marshal_constructor(opcode, iface, ...)
-    local id = raw.wl_proxy_marshal_constructor(self, opcode, iface, nil, ...)
+    local id = raw.wl_proxy_marshal_constructor(self, opcode, iface, ...)
     return return_new_proxy(id)
 end
 
-function M:marshal_constructor_versioned(opcode, iface, version, name, iface_name)
+function M:marshal_constructor_versioned(opcode, iface, version, ...)
     local id = raw.wl_proxy_marshal_constructor_versioned(
-            self, opcode, iface, version, name, iface_name, version, nil)
+            self, opcode, iface, version, ...)
     return return_new_proxy(id)
 end
 

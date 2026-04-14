@@ -13,6 +13,28 @@ void free(void *);
 
 local M = { mt = {}, __private = {} }
 
+-- private helper functions
+
+local function varargs_tail(_, ...)
+    return ...
+end
+
+local function varargs_set(idx, new_value, x, ...)
+    if idx == 1 then
+        return new_value, ...
+    else
+        return x, varargs_set(idx - 1, new_value, ...)
+    end
+end
+
+local function varargs_insert_nil(idx, ...)
+    if idx == 1 then
+        return nil, ...
+    else
+        return select(1, ...), varargs_insert_nil(idx - 1, varargs_tail(...))
+    end
+end
+
 -- internal libwayland representation
 
 local function parse_types(types)
@@ -69,6 +91,7 @@ end
 local function translate_opcode_to_method(iface, opcode)
     local method_data = iface.methods[opcode + 1]
     local type = get_method_type(method_data)
+    local n_idx = method_data.signature:find("n")
     if type == mtype.METHOD then
         return function(other, ...)
             other:marshal(opcode, ...)
@@ -77,7 +100,7 @@ local function translate_opcode_to_method(iface, opcode)
     elseif type == mtype.CONSTRUCTOR then
         return function(other, ...)
             return other:marshal_constructor(opcode,
-                method_data.types[1], ...)
+                method_data.types[n_idx], varargs_insert_nil(n_idx, ...))
         end
     elseif type == mtype.DESTRUCTOR then
         return function(other, ...)
@@ -85,9 +108,17 @@ local function translate_opcode_to_method(iface, opcode)
             raw.wl_proxy_destroy(other)
         end
     elseif type == mtype.VERSIONED_CONSTRUCTOR then
-        return function(other, name, interface, version)
-            return other:marshal_constructor_versioned(opcode,
-                interface, version, name, interface.name)
+        return function(other, ...)
+            local interface = select(n_idx - 2, ...)
+            local version = select(n_idx - 1, ...)
+
+            return other:marshal_constructor_versioned(
+                opcode, interface, version,
+                varargs_set(
+                    n_idx - 2,
+                    interface.name,
+                    varargs_insert_nil(n_idx, ...)))
+
         end
     end
 end
