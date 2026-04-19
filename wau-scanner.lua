@@ -179,7 +179,7 @@ function printer.comment(s)
     if printer.include_comments then
         local toprint = s:gsub("^%s*", "-- "):gsub("\n%s*", "\n-- ")
         for line in (toprint ..'\n'):gmatch'(.-)\r?\n' do
-            printer.line(line)
+            printer.line("%s", line)
         end
     end
     return printer
