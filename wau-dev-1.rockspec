@@ -30,6 +30,6 @@ build = {
       ["wau.cursor.wl_cursor_theme"] = "wau/cursor/wl_cursor_theme.lua",
       ["wau.protocol.wayland"] = "wau/protocol/wayland.lua",
    },
-   copy_directories = { "example" }
+   copy_directories = { "examples" }
 }
 
