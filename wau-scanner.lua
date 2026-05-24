@@ -1,3 +1,5 @@
+#!/usr/bin/env lua
+
 local xml2lua = require("xml2lua")
 local handler = require("xmlhandler.tree")
 
